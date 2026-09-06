@@ -1,0 +1,69 @@
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h2>สมัครสมาชิก</h2>
+            <p>สร้างบัญชีเพื่อเริ่มต้นจองโต๊ะและรับสิทธิพิเศษ</p>
+        </div>
+
+        <div class="alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+
+            <div class="form-group">
+                <label for="fullName">ชื่อ - นามสกุล</label>
+                <input type="text" id="fullName" formControlName="fullName" placeholder="สมชาย ใจดี">
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('fullName')?.hasError('required')">กรุณากรอกชื่อ-นามสกุล</span>
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('fullName')?.hasError('minlength')">ชื่อต้องมีความยาวอย่างน้อย
+                    3 ตัวอักษร</span>
+            </div>
+
+            <div class="form-group">
+                <label for="email">อีเมล</label>
+                <input type="email" id="email" formControlName="email" placeholder="example@email.com">
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('email')?.hasError('required')">กรุณากรอกอีเมล</span>
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('email')?.hasError('email')">รูปแบบอีเมลไม่ถูกต้อง</span>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">เบอร์โทรศัพท์ (ถ้ามี)</label>
+                <input type="tel" id="phone" formControlName="phone" placeholder="0812345678">
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('phone')?.hasError('pattern')">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง
+                    (9-10 หลัก)</span>
+            </div>
+
+            <div class="form-group">
+                <label for="password">รหัสผ่าน</label>
+                <input type="password" id="password" formControlName="password" placeholder="อย่างน้อย 6 ตัวอักษร">
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('password')?.hasError('required')">กรุณากรอกรหัสผ่าน</span>
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('password')?.hasError('minlength')">รหัสผ่านต้องยาวอย่างน้อย
+                    6 ตัวอักษร</span>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">ยืนยันรหัสผ่าน</label>
+                <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="••••••••">
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.get('confirmPassword')?.hasError('required')">กรุณากรอกยืนยันรหัสผ่าน</span>
+                <span class="error-text"
+                    *ngIf="isSubmitted && registerForm.hasError('mismatch')">รหัสผ่านไม่ตรงกัน</span>
+            </div>
+
+            <button type="submit" class="btn-primary" [disabled]="isLoading">
+                {{ isLoading ? 'กำลังบันทึกข้อมูล...' : 'ลงทะเบียน' }}
+            </button>
+
+        </form>
+
+        <div class="login-link">
+            มีบัญชีอยู่แล้วใช่ไหม? <a routerLink="/auth/login">เข้าสู่ระบบที่นี่</a>
+        </div>
+    </div>
+</div>

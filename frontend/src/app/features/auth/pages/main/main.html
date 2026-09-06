@@ -1,0 +1,25 @@
+<div class="main-container">
+    <header class="hero-section">
+        <h1>ค้นหาร้านโปรดของคุณ</h1>
+        <p>จองโต๊ะล่วงหน้า การันตีที่นั่ง ไม่ต้องรอคิวให้เสียเวลา</p>
+    </header>
+
+    <div class="restaurant-grid">
+        <div class="card" *ngFor="let shop of restaurants">
+            <img [src]="shop.image" [alt]="shop.name" class="card-img">
+            <div class="card-body">
+                <h3>{{ shop.name }}</h3>
+                <p>{{ shop.description }}</p>
+
+                <button class="btn-book" [ngClass]="{'btn-member': isLoggedIn, 'btn-guest': !isLoggedIn}"
+                    (click)="onBookTable(shop.id)">
+
+                    <span *ngIf="isLoggedIn">✅ จองโต๊ะทันที</span>
+
+                    <span *ngIf="!isLoggedIn">🔒 ล็อกอินเพื่อจองโต๊ะ</span>
+
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
