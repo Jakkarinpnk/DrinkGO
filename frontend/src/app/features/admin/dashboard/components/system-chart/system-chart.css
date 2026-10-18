@@ -1,0 +1,81 @@
+.chart-panel {
+  height: 100%;
+  min-height: 364px;
+  box-sizing: border-box;
+  padding: 22px;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 7px rgb(15 23 42 / 5%);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+h2,
+header p,
+.chart-placeholder p {
+  margin: 0;
+}
+
+h2 {
+  font-size: 16px;
+}
+
+header p {
+  margin-top: 3px;
+  color: #7b8796;
+  font-size: 12px;
+}
+
+header .material-icons {
+  color: #075fbd;
+}
+
+.chart-placeholder {
+  position: relative;
+  display: flex;
+  min-height: 270px;
+  align-items: center;
+  justify-content: center;
+}
+
+.bars {
+  position: absolute;
+  inset: 28px 6px 32px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  opacity: 0.55;
+}
+
+.bars i {
+  width: 9px;
+  height: 72%;
+  border-radius: 5px 5px 0 0;
+  background: #d8e8fb;
+}
+
+.bars i:nth-child(3n + 1) {
+  height: 42%;
+}
+
+.bars i:nth-child(3n + 2) {
+  height: 58%;
+}
+
+.chart-placeholder > p {
+  z-index: 1;
+  padding: 7px 11px;
+  border-radius: 5px;
+  color: #667386;
+  background: rgb(255 255 255 / 90%);
+  font-size: 13px;
+}

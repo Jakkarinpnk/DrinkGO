@@ -1,17 +1,26 @@
-import express from 'express';
-import cors from 'cors';
-import authRoutes from './routes/auth.routes';
+import { app } from './app';
+import { db, verifyDatabaseConnection } from './config/db';
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const port = Number(process.env.PORT || 3000);
 
-// Middlewares
-app.use(cors());
-app.use(express.json()); // เปิดให้รับ Request Body เป็นแบบ JSON
+const startServer = async (): Promise<void> => {
+  await verifyDatabaseConnection();
+  const server = app.listen(port, () => {
+    console.log(`DrinkGo API is running on port ${port}`);
+  });
 
-// เชื่อมต่อ Routes หลักของระบบเข้ากับ Server
-app.use('/api/auth', authRoutes);
+  const shutdown = (signal: string): void => {
+    console.log(`${signal} received, shutting down`);
+    server.close(() => {
+      void db.end().finally(() => process.exit(0));
+    });
+  };
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+};
+
+startServer().catch((error: unknown) => {
+  console.error('Failed to start DrinkGo API', error);
+  process.exit(1);
 });

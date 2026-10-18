@@ -1,0 +1,168 @@
+<main class="booking-page" [class.history-page]="!storeId" [class.owner-booking-page]="!!storeId">
+  @if (!storeId) {
+    <div class="history-layout">
+      <app-account-sidebar></app-account-sidebar>
+      <section class="history-panel" aria-labelledby="history-title">
+        <header class="history-heading"><h1 id="history-title">ประวัติการจอง</h1></header>
+        <div class="history-content">
+          @if (error()) { <p class="history-error" role="alert">{{ error() }}</p> }
+          @if (message()) { <p class="history-notice" role="status">{{ message() }}</p> }
+          @if (loading()) { <p class="history-state" role="status">กำลังโหลดประวัติการจอง...</p> }
+          @else {
+            @for (booking of bookings(); track booking.id) {
+              <article class="history-card">
+                <a class="history-image" [routerLink]="['/stores', booking.storeId]" [attr.aria-label]="'ดูร้าน ' + booking.storeName">
+                  @if (booking.coverImageUrl) { <img [src]="imageUrl(booking.coverImageUrl)" [alt]="booking.storeName"> }
+                  @else { <span class="material-icons" aria-hidden="true">storefront</span> }
+                </a>
+                <div class="history-info">
+                  <h2>ร้าน : <a [routerLink]="['/stores', booking.storeId]">{{ booking.storeName }}</a></h2>
+                  <div class="history-facts">
+                    <div><span>{{ serviceDateLabel(booking.serviceDate) }}</span><span>{{ booking.arrivalTime }}@if (booking.storeCloseTime) { - {{ booking.storeCloseTime }} } น.</span></div>
+                    <div><span>จำนวนโต๊ะ {{ booking.tableCount || 1 }} โต๊ะ ({{ booking.tableNumber }})</span><span>จำนวนคน {{ booking.peopleCount }} คน</span></div>
+                  </div>
+                  <div class="history-actions">
+                    <button type="button" class="history-details-button" (click)="toggleDetails(booking.id)" [attr.aria-expanded]="expandedId() === booking.id" [attr.aria-controls]="'booking-details-' + booking.id">{{ expandedId() === booking.id ? 'ซ่อนรายละเอียด' : 'ดูรายละเอียด' }}</button>
+                    @if (booking.status === 'COMPLETED') { <button type="button" class="history-review-button" disabled title="ระบบรีวิวจะเปิดให้ใช้งานภายหลัง">รีวิว</button> }
+                  </div>
+                </div>
+                <div class="history-status" [attr.data-status]="booking.status">
+                  <span class="history-status-icon material-icons" aria-hidden="true">{{ statusIcon(booking.status) }}</span>
+                  <span>{{ historyStatusLabel(booking.status) }}</span>
+                </div>
+                @if (expandedId() === booking.id) {
+                  <section class="history-details" [id]="'booking-details-' + booking.id" [attr.aria-label]="'รายละเอียดการจอง ' + booking.code">
+                    <dl>
+                      <div><dt>เลขการจอง</dt><dd>{{ booking.code }}</dd></div>
+                      <div><dt>ชื่อผู้จอง</dt><dd>{{ booking.contactName || 'ไม่ระบุ' }}</dd></div>
+                      <div><dt>เบอร์ติดต่อผู้จอง</dt><dd>{{ booking.contactPhone || 'ไม่ระบุ' }}</dd></div>
+                      <div><dt>สถานะ</dt><dd>{{ historyStatusLabel(booking.status) }}</dd></div>
+                    </dl>
+                    @if (booking.status === 'CONFIRMED') {
+                      <p>ยกเลิกได้ก่อน {{ booking.cancellationDeadline | date:'dd/MM/yyyy HH:mm':'+0700' }} น.</p>
+                      @if (booking.canCancel) { <button type="button" class="history-cancel-button" [disabled]="saving()" (click)="request(booking, 'CANCELLED')">ยกเลิกการจอง</button> }
+                      @else { <p>หากต้องการเปลี่ยนแปลงการจอง กรุณาติดต่อร้าน <a [href]="'tel:' + booking.storePhone">{{ booking.storePhone }}</a></p> }
+                    }
+                    @if (pending(); as action) {
+                      @if (action.booking.id === booking.id) {
+                        <div class="history-confirmation" role="region" aria-label="ยืนยันการยกเลิกการจอง">
+                          <strong>ยืนยันยกเลิกการจองนี้หรือไม่?</strong>
+                          <div class="history-confirmation-actions">
+                            <button type="button" class="history-confirm-button" [disabled]="saving()" (click)="confirm()">{{ saving() ? 'กำลังบันทึก...' : 'ยืนยัน' }}</button>
+                            <button type="button" class="history-back-button" [disabled]="saving()" (click)="pending.set(null)">กลับ</button>
+                          </div>
+                        </div>
+                      }
+                    }
+                  </section>
+                }
+              </article>
+            } @empty {
+              @if (!error()) { <div class="history-state"><span class="material-icons" aria-hidden="true">event_available</span><h2>ยังไม่มีรายการจอง</h2><p>เลือกร้านที่ชอบ แล้วเริ่มจองโต๊ะได้เลย</p><a routerLink="/">ค้นหาร้าน</a></div> }
+            }
+          }
+        </div>
+      </section>
+    </div>
+  } @else {
+    <div class="owner-booking-layout">
+      <app-account-sidebar></app-account-sidebar>
+      <section class="owner-booking-panel" aria-labelledby="owner-booking-title">
+        <header class="owner-booking-heading">
+          <p>จัดการร้าน</p>
+          <h1 id="owner-booking-title">รายการจอง · {{ storeName() || 'ร้านของฉัน' }}</h1>
+          <span>ตรวจสอบและจัดการการจองโต๊ะตามคืนวันที่เปิดบริการ</span>
+        </header>
+        <nav class="owner-booking-tabs" aria-label="เมนูจัดการร้าน">
+          <a routerLink="/owner">ร้านของฉัน</a>
+          <a [routerLink]="['/owner/stores', storeId, 'bookings']" aria-current="page">รายการจอง</a>
+          <a [routerLink]="['/owner/stores', storeId, 'tables']">จัดการโต๊ะ</a>
+          <a [routerLink]="['/owner/stores', storeId, 'layout']">Layout ร้าน</a>
+        </nav>
+
+        <div class="owner-booking-content">
+          <div class="owner-booking-title-row">
+            <div><h2>รายการจองโต๊ะ</h2><p>ข้อมูลสรุปตามคืนวันที่ {{ serviceDateLabel(date) }}</p></div>
+            <button type="button" class="owner-refresh" [disabled]="loading() || saving()" (click)="load()">รีเฟรชรายการ</button>
+          </div>
+          @if (error()) { <p class="history-error" role="alert">{{ error() }}</p> }
+          @if (message()) { <p class="history-notice" role="status">{{ message() }}</p> }
+
+          <div class="owner-booking-stats" aria-label="สรุปรายการจองของคืนที่เลือก">
+            <div><span>การจองทั้งหมด</span><strong>{{ ownerCount() }}</strong><small>รายการ</small></div>
+            <div><span>ยืนยันแล้ว</span><strong>{{ ownerCount('CONFIRMED') }}</strong><small>รายการ</small></div>
+            <div><span>ใช้บริการแล้ว</span><strong>{{ ownerCount('COMPLETED') }}</strong><small>รายการ</small></div>
+            <div><span>ยกเลิกแล้ว</span><strong>{{ ownerCount('CANCELLED') }}</strong><small>รายการ</small></div>
+          </div>
+
+          <div class="owner-booking-filters">
+            <label class="owner-search"><span class="sr-only">ค้นหารายการจอง</span><input type="search" [(ngModel)]="searchText" (ngModelChange)="resetPage()" placeholder="ค้นหาชื่อ เบอร์โทร เลขการจอง หรือโต๊ะ"></label>
+            <label><span class="sr-only">คืนวันที่เปิดบริการ</span><input type="date" [(ngModel)]="date" (ngModelChange)="load()" [disabled]="saving()" aria-label="คืนวันที่เปิดบริการ"></label>
+            <label><span class="sr-only">สถานะการจอง</span><select [(ngModel)]="statusFilter" (ngModelChange)="resetPage()" aria-label="สถานะการจอง">
+              <option value="">ทุกสถานะ</option><option value="PENDING">รอดำเนินการ</option><option value="CONFIRMED">ยืนยันแล้ว</option>
+              <option value="COMPLETED">ใช้บริการแล้ว</option><option value="CANCELLED">ยกเลิกแล้ว</option><option value="NO_SHOW">ไม่มาใช้บริการ</option>
+            </select></label>
+          </div>
+
+          @if (loading()) { <p class="owner-booking-state" role="status">กำลังโหลดรายการจอง...</p> }
+          @else {
+            <div class="owner-booking-table-scroll">
+              <table class="owner-booking-table">
+                <thead><tr><th scope="col">เลขการจอง</th><th scope="col">ชื่อลูกค้า</th><th scope="col">วัน/เวลา</th><th scope="col">จำนวน</th><th scope="col">โต๊ะ</th><th scope="col">สถานะ</th><th scope="col">จัดการ</th></tr></thead>
+                <tbody>
+                  @for (booking of ownerPageRows(); track booking.id) {
+                    <tr>
+                      <td class="owner-booking-code">{{ booking.code }}</td>
+                      <td>{{ booking.contactName || 'ไม่ระบุ' }}</td>
+                      <td>{{ booking.arrivalAt ? (booking.arrivalAt | date:'dd/MM/yyyy HH:mm':'+0700') : booking.arrivalTime + ' น.' }}</td>
+                      <td>{{ booking.peopleCount }} คน</td>
+                      <td>{{ booking.tableNumber }}</td>
+                      <td><span class="owner-status" [attr.data-status]="booking.status">{{ statusLabel(booking.status) }}</span></td>
+                      <td><button type="button" class="owner-details-button" (click)="toggleDetails(booking.id)" [attr.aria-expanded]="expandedId() === booking.id" [attr.aria-controls]="'owner-booking-details-' + booking.id">{{ expandedId() === booking.id ? 'ซ่อนรายละเอียด' : 'ดูรายละเอียด' }}</button></td>
+                    </tr>
+                    @if (expandedId() === booking.id) {
+                      <tr class="owner-detail-row"><td colspan="7">
+                        <section [id]="'owner-booking-details-' + booking.id" [attr.aria-label]="'รายละเอียดการจอง ' + booking.code">
+                          <dl>
+                            <div><dt>คืนวันที่เปิดบริการ</dt><dd>{{ serviceDateLabel(booking.serviceDate) }}</dd></div>
+                            <div><dt>จำนวนโต๊ะ</dt><dd>{{ booking.tableCount || 1 }} โต๊ะ ({{ booking.tableNumber }})</dd></div>
+                            <div><dt>เบอร์ติดต่อผู้จอง</dt><dd>@if (booking.contactPhone) { <a [href]="'tel:' + booking.contactPhone">{{ booking.contactPhone }}</a> } @else { ไม่ระบุ }</dd></div>
+                            <div><dt>เวลาเข้าร้าน</dt><dd>{{ booking.arrivalTime }} น.</dd></div>
+                          </dl>
+                          <div class="owner-detail-actions">
+                            @if (booking.status === 'CONFIRMED') { <button type="button" class="danger" [disabled]="saving()" (click)="request(booking, 'CANCELLED')">ยกเลิกการจอง</button> }
+                            @if (booking.canComplete) { <button type="button" class="primary" [disabled]="saving()" (click)="request(booking, 'COMPLETED')">ใช้บริการแล้ว</button> }
+                          </div>
+                          @if (pending(); as action) {
+                            @if (action.booking.id === booking.id) {
+                              <div class="owner-confirmation" role="region" aria-label="ยืนยันการเปลี่ยนสถานะ">
+                                <strong>{{ action.status === 'CANCELLED' ? 'ยืนยันยกเลิกการจองนี้หรือไม่?' : 'ยืนยันว่าลูกค้าใช้บริการแล้วหรือไม่?' }}</strong>
+                                <p>{{ action.status === 'CANCELLED' ? 'โต๊ะจะกลับมาเปิดรับจองในคืนที่เลือก' : 'โต๊ะนี้จะยังไม่เปิดรับจองซ้ำในคืนเดียวกัน' }}</p>
+                                <div><button class="primary" type="button" [disabled]="saving()" (click)="confirm()">{{ saving() ? 'กำลังบันทึก...' : 'ยืนยัน' }}</button>
+                                  <button class="secondary" type="button" [disabled]="saving()" (click)="pending.set(null)">กลับ</button></div>
+                              </div>
+                            }
+                          }
+                        </section>
+                      </td></tr>
+                    }
+                  } @empty {
+                    <tr><td colspan="7" class="owner-booking-empty">{{ bookings().length ? 'ไม่พบรายการที่ตรงกับตัวกรอง' : 'ยังไม่มีการจองในคืนนี้' }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="owner-booking-footer">
+              <span>แสดง {{ filteredOwnerBookings().length ? (page - 1) * pageSize + 1 : 0 }}–{{ page * pageSize < filteredOwnerBookings().length ? page * pageSize : filteredOwnerBookings().length }} จาก {{ filteredOwnerBookings().length }} รายการ</span>
+              <nav aria-label="หน้ารายการจอง">
+                <button type="button" [disabled]="page === 1" (click)="page = page - 1">ก่อนหน้า</button>
+                <span>หน้า {{ page }} / {{ ownerPageCount() }}</span>
+                <button type="button" [disabled]="page >= ownerPageCount()" (click)="page = page + 1">ถัดไป</button>
+              </nav>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</main>

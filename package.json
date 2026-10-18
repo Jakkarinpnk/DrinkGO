@@ -1,0 +1,17 @@
+{
+  "name": "drinkgo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix frontend run start",
+    "start:frontend": "npm --prefix frontend run start",
+    "start:backend": "npm --prefix backend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "test:frontend": "npm --prefix frontend run test -- --watch=false",
+    "test:backend-auth": "npm --prefix backend run test:auth-smoke",
+    "test:backend-booking": "npm --prefix backend run test:booking-smoke",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "db:verify": "npm --prefix backend run db:verify"
+  }
+}

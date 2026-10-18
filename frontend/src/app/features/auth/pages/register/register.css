@@ -71,16 +71,6 @@
     text-align: center;
 }
 
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    text-align: center;
-}
-
 .btn-primary {
     width: 100%;
     padding: 12px;

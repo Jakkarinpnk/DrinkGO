@@ -1,0 +1,258 @@
+:host {
+  display: block;
+  color: #172033;
+}
+
+.store-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.store-actions button, .store-actions a { padding: 9px 14px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #172033; cursor: pointer; font: inherit; font-size: 14px; }
+.store-actions .primary { background: #0967cf; color: #fff; border-color: #0967cf; }
+.store-actions .danger { color: #b42318; border-color: #f4b4ae; }
+.store-actions button:disabled { opacity: .6; cursor: wait; }
+.success-message { color: #166534; padding: 12px; background: #dcfce7; border-radius: 6px; }
+
+.account-page {
+  min-height: calc(100vh - 64px);
+  padding: 32px 20px 48px;
+  background: #f3f5f7;
+}
+
+.account-layout {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  gap: 16px;
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  align-items: start;
+}
+
+.stores-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dce2e8;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(17 24 39 / 8%);
+}
+
+.panel-header {
+  min-height: 76px;
+  box-sizing: border-box;
+  padding: 13px 26px;
+  color: #fff;
+  background: #0967cf;
+}
+
+.panel-header h1,
+.panel-header p {
+  margin: 0;
+}
+
+.panel-header h1 {
+  font-size: 24px;
+}
+
+.panel-header p {
+  margin-top: 3px;
+  color: #dbeafe;
+  font-size: 13px;
+}
+
+.panel-content {
+  min-height: 360px;
+  padding: 10px 24px 28px;
+}
+
+.store-groups {
+  display: grid;
+  gap: 22px;
+  padding-top: 18px;
+}
+
+.store-group {
+  overflow: hidden;
+  border: 1px solid #e1e7ed;
+  border-radius: 6px;
+}
+
+.group-header {
+  display: flex;
+  min-height: 62px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #f7f9fb;
+}
+
+.group-header h2,
+.group-header p {
+  margin: 0;
+}
+
+.group-header h2 {
+  font-size: 17px;
+}
+
+.group-header p {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.group-empty {
+  margin: 0;
+  padding: 22px 16px;
+  color: #7b8797;
+  font-size: 13px;
+  text-align: center;
+}
+
+.store-list {
+  display: grid;
+  padding: 0 16px;
+}
+
+.store-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 38%) minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid #e4e9ef;
+}
+
+.store-item:last-child {
+  border-bottom: 0;
+}
+
+.store-visual {
+  display: grid;
+  min-height: 160px;
+  place-items: center;
+  border-radius: 6px;
+  color: #0875c9;
+  background: #eaf5fc;
+}
+
+.store-visual .material-icons {
+  font-size: 58px;
+}
+
+.store-details {
+  min-width: 0;
+}
+
+.store-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.store-heading h3 {
+  margin: 0;
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.service-status {
+  display: inline-block;
+  padding: 4px 7px;
+  border-radius: 4px;
+  color: #166534;
+  background: #dcfce7;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 9px 0 0;
+  color: #475569;
+  font-size: 14px;
+}
+
+.detail-row .material-icons {
+  color: #0875c9;
+  font-size: 18px;
+}
+
+.description {
+  margin: 12px 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.missing-details {
+  margin: 12px 0;
+  padding: 9px 11px;
+  border-left: 3px solid #dc2626;
+  color: #991b1b;
+  background: #fff1f2;
+  font-size: 13px;
+}
+
+.service-status.closed {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.state {
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+.state p {
+  margin: 0;
+}
+
+.state.error {
+  color: #b42318;
+}
+
+.state button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid #0967cf;
+  border-radius: 6px;
+  color: #0967cf;
+  background: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .account-page {
+    padding: 20px 14px 36px;
+  }
+
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .panel-content {
+    padding: 8px 16px 22px;
+  }
+
+  .store-item {
+    grid-template-columns: 1fr;
+  }
+
+  .store-visual {
+    min-height: 132px;
+  }
+}
+
+.store-actions a { text-decoration: none; }
+.store-visual img { width: 100%; height: 190px; object-fit: cover; border-radius: 6px; }
+.action-error { color: #b42318; }

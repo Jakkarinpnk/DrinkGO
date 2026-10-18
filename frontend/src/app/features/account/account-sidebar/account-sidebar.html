@@ -1,0 +1,37 @@
+<aside class="account-sidebar" aria-label="เมนูบัญชี" *ngIf="currentUser$ | async as user">
+  <div class="account-summary">
+    <div class="summary-avatar" aria-hidden="true">
+      <img *ngIf="displayedImage(user) as imageUrl; else summaryInitial" [src]="imageUrl" alt="">
+      <ng-template #summaryInitial>{{ initial(user) }}</ng-template>
+    </div>
+    <div class="summary-copy">
+      <strong>{{ user.fullName }}</strong>
+      <span>{{ roleLabel(user.role) }}</span>
+    </div>
+  </div>
+
+  <nav class="account-nav">
+    
+    <a routerLink="/profile" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <span class="material-icons" aria-hidden="true">person</span>
+      <span>ข้อมูลสมาชิก</span>
+    </a>
+    <a
+      *ngIf="user.role === 'member' || user.role === 'owner'"
+      routerLink="/owner-application"
+      routerLinkActive="active">
+      <span class="material-icons" aria-hidden="true">app_registration</span>
+      <span>ลงทะเบียนร้าน</span>
+    </a>
+    <a
+      *ngIf="user.role === 'member' || user.role === 'owner'"
+      routerLink="/owner"
+      routerLinkActive="active">
+      <span class="material-icons" aria-hidden="true">storefront</span>
+      <span>ร้านของฉัน</span>
+    </a>
+    <a *ngIf="user.role === 'member' || user.role === 'owner'" routerLink="/bookings" routerLinkActive="active">
+      <span class="material-icons" aria-hidden="true">event_available</span><span>ประวัติการจอง</span>
+    </a>
+  </nav>
+</aside>

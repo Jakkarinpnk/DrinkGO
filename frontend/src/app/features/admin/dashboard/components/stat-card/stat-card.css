@@ -1,0 +1,36 @@
+.stat-card {
+  display: flex;
+  min-height: 106px;
+  box-sizing: border-box;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 18px;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 7px rgb(15 23 42 / 5%);
+}
+
+.material-icons {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #075fbd;
+  background: #e7f2ff;
+  font-size: 19px;
+}
+
+p {
+  margin: 0 0 10px;
+  color: #5f6b7a;
+  font-size: 12px;
+}
+
+strong {
+  color: #172033;
+  font-size: 22px;
+}

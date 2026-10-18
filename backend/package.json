@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -10,25 +9,16 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "mysql2": "^3.22.3",
-    "node-cron": "^4.2.1",
-    "nodemailer": "^8.0.7",
-    "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0",
-    "uuid": "^14.0.0"
+    "nodemailer": "^8.0.7"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
-    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.1.0",
     "@types/node": "^25.7.0",
-    "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^8.0.0",
-    "@types/passport": "^1.0.17",
-    "@types/passport-google-oauth20": "^2.0.17",
-    "@types/uuid": "^10.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
@@ -41,6 +31,12 @@
     "start": "ts-node src/server.ts",
     "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
     "build": "tsc",
+    "db:migrate": "ts-node src/database/migrate.ts",
+    "db:verify": "ts-node src/database/verify-schema.ts",
+    "test:auth-smoke": "ts-node src/tests/auth.smoke.ts",
+    "test:owner-application-smoke": "ts-node src/tests/owner-application.smoke.ts",
+    "test:booking-smoke": "ts-node src/tests/booking.smoke.ts",
+    "email:verify": "ts-node src/tests/email.verify.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

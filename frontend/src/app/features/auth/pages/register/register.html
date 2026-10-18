@@ -6,13 +6,12 @@
         </div>
 
         <div class="alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
-        <div class="alert-success" *ngIf="successMessage">{{ successMessage }}</div>
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
 
             <div class="form-group">
                 <label for="fullName">ชื่อ - นามสกุล</label>
-                <input type="text" id="fullName" formControlName="fullName" placeholder="สมชาย ใจดี">
+                <input type="text" id="fullName" formControlName="fullName" placeholder="ชื่อ-สกุล">
                 <span class="error-text"
                     *ngIf="isSubmitted && registerForm.get('fullName')?.hasError('required')">กรุณากรอกชื่อ-นามสกุล</span>
                 <span class="error-text"
@@ -22,7 +21,7 @@
 
             <div class="form-group">
                 <label for="email">อีเมล</label>
-                <input type="email" id="email" formControlName="email" placeholder="example@email.com">
+                <input type="email" id="email" formControlName="email" >
                 <span class="error-text"
                     *ngIf="isSubmitted && registerForm.get('email')?.hasError('required')">กรุณากรอกอีเมล</span>
                 <span class="error-text"
@@ -31,20 +30,20 @@
 
             <div class="form-group">
                 <label for="phone">เบอร์โทรศัพท์ (ถ้ามี)</label>
-                <input type="tel" id="phone" formControlName="phone" placeholder="0812345678">
+                <input type="tel" id="phone" formControlName="phone" >
                 <span class="error-text"
                     *ngIf="isSubmitted && registerForm.get('phone')?.hasError('pattern')">กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง
-                    (9-10 หลัก)</span>
+                    (9-15 หลัก)</span>
             </div>
 
             <div class="form-group">
                 <label for="password">รหัสผ่าน</label>
-                <input type="password" id="password" formControlName="password" placeholder="อย่างน้อย 6 ตัวอักษร">
+                <input type="password" id="password" formControlName="password" placeholder="••••••••" >
                 <span class="error-text"
                     *ngIf="isSubmitted && registerForm.get('password')?.hasError('required')">กรุณากรอกรหัสผ่าน</span>
                 <span class="error-text"
                     *ngIf="isSubmitted && registerForm.get('password')?.hasError('minlength')">รหัสผ่านต้องยาวอย่างน้อย
-                    6 ตัวอักษร</span>
+                    8 ตัวอักษร</span>
             </div>
 
             <div class="form-group">

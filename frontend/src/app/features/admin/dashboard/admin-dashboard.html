@@ -1,0 +1,29 @@
+<main class="dashboard-page">
+  <header class="dashboard-heading">
+    <p>ADMIN PANEL</p>
+    <h1>Admin Dashboard</h1>
+    <span>ภาพรวมสำหรับผู้ดูแลระบบ</span>
+  </header>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-summary">
+      <section class="stat-grid" aria-label="สถิติภาพรวม" [attr.aria-busy]="isLoading">
+        <app-admin-stat-card
+          *ngFor="let statistic of statisticCards"
+          [label]="statistic.label"
+          [icon]="statistic.icon"
+          [value]="statistic.value">
+        </app-admin-stat-card>
+      </section>
+
+      <div class="statistics-error" *ngIf="errorMessage" role="alert">
+        <span>{{ errorMessage }}</span>
+        <button type="button" (click)="loadStatistics()">ลองใหม่</button>
+      </div>
+
+      <app-admin-review-summary></app-admin-review-summary>
+    </div>
+
+    <app-admin-system-chart></app-admin-system-chart>
+  </div>
+</main>

@@ -1,0 +1,126 @@
+<main class="booking-page reservation-page">
+  <nav class="breadcrumbs"><a [routerLink]="['/stores', storeId]">← กลับหน้าร้าน</a></nav>
+
+  @if (success(); as booking) {
+    <section class="card success" role="status">
+      <span class="material-icons success-icon" aria-hidden="true">check_circle</span>
+      <p class="eyebrow">ยืนยันการจองแล้ว</p><h1>จองโต๊ะสำเร็จ</h1>
+      <p>แสดงเลขการจองนี้เมื่อถึงร้าน</p><strong class="booking-code">{{ booking.code }}</strong>
+      <dl class="summary-grid">
+        <div><dt>ร้าน / โต๊ะ</dt><dd>{{ booking.storeName }} · {{ booking.tableNumber }}</dd></div>
+        <div><dt>คืนวันที่</dt><dd>{{ booking.serviceDate | date:'dd/MM/yyyy' }}</dd></div>
+        <div><dt>วันและเวลาเข้าร้าน</dt><dd>{{ booking.arrivalAt | date:'dd/MM/yyyy HH:mm':'+0700' }} น.</dd></div>
+        <div><dt>ผู้จอง / จำนวนคน</dt><dd>{{ booking.contactName }} · {{ booking.peopleCount }} คน</dd></div>
+        <div><dt>เบอร์ติดต่อ</dt><dd>{{ booking.contactPhone }}</dd></div>
+      </dl>
+      <p class="notice">ไม่มีค่าชำระเงินในการจอง</p>
+    </section>
+  } @else {
+    <header class="reservation-overview">
+      <div class="reservation-store">
+        <div class="reservation-store-image">
+          @if (store()?.coverImageUrl; as coverImage) { <img [src]="imageUrl(coverImage)" [alt]="store()?.name || 'รูปภาพร้าน'"> }
+          @else { <span class="material-icons" aria-hidden="true">storefront</span> }
+        </div>
+        <div class="reservation-store-details">
+          <h1>{{ store()?.name || availability()?.storeName || 'จองโต๊ะ' }}</h1>
+          <div class="reservation-meta">
+            @if (store()?.category?.name) { <span class="reservation-category">{{ store()?.category?.name }}</span> }
+            @if (store()?.province) { <span><span class="material-icons" aria-hidden="true">location_on</span>{{ store()?.province }}</span> }
+          </div>
+          @if (availability(); as data) { <p class="reservation-hours">เวลาเปิด–ปิด: {{ data.openTime }}–{{ data.closeTime }} น.</p> }
+          <div class="reservation-policy">
+            <strong>จองโต๊ะได้ทันทีโดยไม่ต้องชำระเงิน</strong>
+            @if (availability(); as data) {
+              <span>{{ data.cancelBeforeDays ? 'ยกเลิกได้ก่อนเวลาเข้าร้านอย่างน้อย ' + data.cancelBeforeDays + ' วัน' : 'ยกเลิกได้ก่อนเวลาเข้าร้าน' }}</span>
+              @if (data.bookingPolicy) { <span class="policy">{{ data.bookingPolicy }}</span> }
+            }
+          </div>
+        </div>
+      </div>
+      <div class="reservation-progress" aria-label="ขั้นตอนการจอง">
+        <div class="reservation-progress-step current"><span>1</span><strong>กรอกข้อมูลการจอง</strong></div>
+        <div class="reservation-progress-line" aria-hidden="true"></div>
+        <div class="reservation-progress-step future"><span>2</span><strong>ชำระเงิน (ยังไม่เปิดใช้)</strong></div>
+      </div>
+    </header>
+
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+    <form #bookingForm="ngForm" (ngSubmit)="book()">
+      <fieldset [disabled]="saving()" class="form-fields">
+        <div class="reservation-workspace">
+          <section class="reservation-map-section" aria-labelledby="reservation-map-title">
+            <h2 id="reservation-map-title">แผนผังโต๊ะ</h2>
+            <div class="reservation-legend" aria-label="คำอธิบายสถานะโต๊ะ">
+              <span><i class="available"></i>ว่าง</span>
+              <span><i class="booked"></i>จองแล้ว</span>
+              <span><i class="too-small"></i>ที่นั่งไม่พอ</span>
+              <span><i class="inactive"></i>ปิดรับจอง</span>
+            </div>
+            <p class="reservation-map-hint">แตะโต๊ะบนแผนผังเพื่อเลือกได้หลายโต๊ะ แตะซ้ำเพื่อยกเลิก</p>
+
+            @if (loading()) { <p class="reservation-state" role="status">กำลังตรวจสอบโต๊ะว่าง...</p> }
+            @if (availability(); as data) {
+              @if (data.layoutImageUrl) {
+                <div class="layout-scroll reservation-layout-scroll">
+                  <div class="layout-canvas reservation-layout">
+                    <img [src]="imageUrl(data.layoutImageUrl)" alt="แผนผังโต๊ะของร้าน">
+                    @for (table of data.tables; track table.id) {
+                      @if (table.positionX !== null && table.positionY !== null) {
+                        <button type="button" class="table-marker" [class.selected]="selectedTableIds().includes(table.id)"
+                          [attr.data-state]="table.state" [style.left.%]="table.positionX" [style.top.%]="table.positionY"
+                          [disabled]="!canSelect(table)" [attr.aria-pressed]="selectedTableIds().includes(table.id)"
+                          [title]="'โต๊ะ ' + table.tableNumber + ' · ' + table.seatCapacity + ' ที่นั่ง · ' + tableLabel(table)"
+                          (click)="toggleTable(table)">{{ table.tableNumber }}</button>
+                      }
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="reservation-no-layout"><span class="material-icons" aria-hidden="true">table_restaurant</span><p>ร้านยังไม่มีรูปแผนผังสำหรับเลือกโต๊ะ</p></div>
+              }
+            } @else if (!loading()) {
+              <button type="button" class="secondary" (click)="loadAvailability()">ตรวจสอบโต๊ะว่างอีกครั้ง</button>
+            }
+          </section>
+
+          <section class="reservation-form-section" aria-labelledby="reservation-form-title">
+            <h2 id="reservation-form-title">ข้อมูลการจอง</h2>
+            <label>คืนวันที่เปิดบริการ
+              <input type="date" name="serviceDate" [(ngModel)]="serviceDate" [min]="minDate" required (ngModelChange)="loadAvailability()">
+            </label>
+            <label>เวลาเข้าร้าน
+              <select name="arrivalTime" [(ngModel)]="arrivalTime" required [disabled]="!availability()">
+                <option value="" disabled>เลือกเวลาเข้าร้าน</option>
+                @if (availability(); as data) {
+                  @for (time of timeOptions(data); track time.value) { <option [value]="time.value">{{ time.label }}</option> }
+                }
+              </select>
+            </label>
+            <div class="reservation-field-row">
+              <div class="reservation-table-summary">
+                <span>โต๊ะ</span>
+                <output>{{ selectedTableNames() || 'แตะโต๊ะบนแผนผัง' }}</output>
+              </div>
+              <label>จำนวนคน
+                <input type="number" name="peopleCount" [(ngModel)]="peopleCount" min="1" max="1000" step="1" required (ngModelChange)="loadAvailability(true)">
+              </label>
+            </div>
+            @if (selectedTableIds().length) { <p class="reservation-capacity">โต๊ะที่เลือก {{ selectedTableNames() }} รองรับรวม {{ selectedCapacity() }} คน</p> }
+            @if (selectedTableIds().length && peopleCount > selectedCapacity()) { <p class="reservation-capacity-error" role="alert">ที่นั่งรวมไม่เพียงพอ กรุณาเลือกโต๊ะเพิ่ม</p> }
+            <p class="reservation-date-hint">หากมาหลังเที่ยงคืน ให้เลือกคืนวันที่ร้านเริ่มเปิดบริการ</p>
+            @if (availability(); as data) {
+              @if (!timeOptions(data).length) { <p class="notice">ไม่มีเวลาจองที่เหลือสำหรับคืนนี้ กรุณาเลือกคืนอื่น</p> }
+              @if (data.cancellationPolicy) { <p class="policy reservation-cancellation-policy">{{ data.cancellationPolicy }}</p> }
+            }
+            @if (!contactPhone) { <p class="reservation-capacity-error">กรุณาเพิ่มเบอร์โทรศัพท์ใน <a routerLink="/profile">ข้อมูลสมาชิก</a> ก่อนจอง</p> }
+            <button class="primary reservation-submit" type="submit"
+              [disabled]="bookingForm.invalid || !selectedTableIds().length || peopleCount > selectedCapacity() || !arrivalTime || !contactPhone || loading()">{{ saving() ? 'กำลังจอง...' : 'จองเลย' }}</button>
+          </section>
+        </div>
+      </fieldset>
+    </form>
+
+  }
+</main>

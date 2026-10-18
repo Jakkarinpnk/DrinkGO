@@ -1,0 +1,131 @@
+<main class="account-page">
+  <div class="account-layout">
+    <app-account-sidebar></app-account-sidebar>
+
+    <section class="layout-panel">
+      <header class="panel-header">
+        <div>
+          <h1>Layout ร้าน</h1>
+          <p>อัปโหลดรูป วางตำแหน่งโต๊ะ และกำหนดสถานะโต๊ะบน Layout</p>
+        </div>
+        <div class="header-links">
+          <a [routerLink]="['/owner/stores', storeId, 'tables']">จัดการโต๊ะ</a>
+          <a routerLink="/owner"><span class="material-icons" aria-hidden="true">arrow_back</span> ร้านของฉัน</a>
+        </div>
+      </header>
+
+      <div class="panel-content">
+        <div class="state" *ngIf="isLoading" role="status">กำลังโหลด Layout...</div>
+        <div class="state error" *ngIf="!isLoading && errorMessage && !layout">
+          <p>{{ errorMessage }}</p><button type="button" (click)="loadLayout()">ลองใหม่</button>
+        </div>
+
+        <ng-container *ngIf="!isLoading && layout">
+          <p class="message success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+          <p class="message error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+
+          <section class="image-toolbar">
+            <div>
+              <h2>รูป Layout</h2>
+              <p *ngIf="selectedImage">เลือกรูป Layout ใหม่แล้ว กดบันทึกเพื่อใช้งาน</p>
+              <p *ngIf="!layout.imageUrl && !selectedImage">ยังไม่มีรูป Layout สำหรับร้านนี้</p>
+              <small>รองรับ JPG, PNG และ WebP ขนาดไม่เกิน 5 MB</small>
+              <small *ngIf="layout.imageUrl">การเปลี่ยนรูปจะคงตำแหน่งโต๊ะเดิมแบบเปอร์เซ็นต์ไว้</small>
+            </div>
+            <div class="image-actions">
+              <label class="file-button" [class.disabled]="busy">
+                <span class="material-icons" aria-hidden="true">upload</span>
+                {{ layout.imageUrl ? 'เลือกรูปใหม่' : 'เลือกรูป Layout' }}
+                <input type="file" accept="image/jpeg,image/png,image/webp" (change)="selectImage($event)" [disabled]="busy">
+              </label>
+              <button class="primary" type="button" *ngIf="selectedImage" (click)="saveImage()" [disabled]="busy">
+                {{ isSavingImage ? 'กำลังบันทึก...' : 'บันทึกรูป' }}
+              </button>
+              <button type="button" *ngIf="selectedImage" (click)="cancelImage()" [disabled]="isSavingImage">ยกเลิก</button>
+              <button class="danger" type="button" *ngIf="layout.imageUrl && !selectedImage" (click)="requestDeleteImage()" [disabled]="busy">
+                {{ isDeletingImage ? 'กำลังลบ...' : 'ลบ Layout' }}
+              </button>
+            </div>
+          </section>
+          <p class="field-error" *ngIf="imageError" role="alert">{{ imageError }}</p>
+
+          <div class="status-legend" aria-label="คำอธิบายสถานะโต๊ะ">
+            <span><i class="available"></i>เปิดใช้งาน</span>
+            <span><i class="unavailable"></i>ปิดใช้งาน</span>
+          </div>
+
+          <div class="layout-workspace">
+            <section class="canvas-card">
+              <div class="canvas-instructions" *ngIf="imageSrc">
+                <span class="material-icons" aria-hidden="true">open_with</span>
+                ลากโต๊ะบนรูปไปยังตำแหน่งที่ต้องการ แล้วกดบันทึกตำแหน่ง
+              </div>
+
+              <div class="canvas-scroll" *ngIf="imageSrc; else noLayoutImage">
+                <div #layoutCanvas class="layout-canvas"
+                  (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="endDrag($event)">
+                  <img [src]="imageSrc" alt="รูป Layout ของร้าน" draggable="false">
+                  <button
+                    type="button"
+                    class="table-marker"
+                    *ngFor="let table of placedTables; trackBy: tableId"
+                    [ngClass]="statusClass(table.layoutStatus)"
+                    [class.dragging]="draggingId === table.id"
+                    [style.left.%]="table.positionX"
+                    [style.top.%]="table.positionY"
+                    (pointerdown)="startDrag($event, table)"
+                    [attr.aria-label]="'โต๊ะ ' + table.tableNumber + ' ' + statusLabel(table.layoutStatus)">
+                    <strong>{{ table.tableNumber }}</strong>
+                    <small>{{ table.seatCapacity }} ที่นั่ง</small>
+                  </button>
+                </div>
+              </div>
+              <ng-template #noLayoutImage>
+                <div class="empty-canvas">
+                  <span class="material-icons" aria-hidden="true">map</span>
+                  <strong>เพิ่มรูป Layout เพื่อเริ่มจัดวางโต๊ะ</strong>
+                  <p>เลือกรูปด้านบนแล้วกดบันทึกรูป</p>
+                </div>
+              </ng-template>
+
+              <footer class="canvas-footer">
+                <span *ngIf="!positionsDirty">ตำแหน่งล่าสุดถูกบันทึกแล้ว</span>
+                <button class="primary" type="button" (click)="saveTables()" [disabled]="!layout.imageUrl || !positionsDirty || busy">
+                  {{ isSavingTables ? 'กำลังบันทึก...' : 'บันทึกตำแหน่งและสถานะ' }}
+                </button>
+              </footer>
+            </section>
+
+            <aside class="tables-card">
+              <header><h2>โต๊ะในร้าน</h2><span>{{ tables.length }} โต๊ะ</span></header>
+              <div class="no-tables" *ngIf="tables.length === 0">
+                <p>ร้านนี้ยังไม่มีโต๊ะ</p>
+                <a [routerLink]="['/owner/stores', storeId, 'tables']">เพิ่มโต๊ะก่อนจัด Layout</a>
+              </div>
+              <div class="layout-table-list" *ngIf="tables.length > 0">
+                <article *ngFor="let table of tables; trackBy: tableId" [class.selected]="draggingId === table.id">
+                  <div class="table-row">
+                    <div><strong>โต๊ะ {{ table.tableNumber }}</strong><small>{{ table.seatCapacity }} ที่นั่ง</small></div>
+                    <span class="status-badge" [ngClass]="statusClass(table.layoutStatus)">{{ statusLabel(table.layoutStatus) }}</span>
+                  </div>
+                  <label>
+                    สถานะโต๊ะ
+                    <select [value]="table.status" (change)="changeStatus(table, $event)"
+                      [disabled]="busy || table.layoutStatus === 'PENDING_PAYMENT' || table.layoutStatus === 'BOOKED'">
+                      <option value="ACTIVE">เปิดใช้งาน</option>
+                      <option value="INACTIVE">ปิดใช้งาน</option>
+                    </select>
+                  </label>
+                  <div class="table-actions">
+                    <button type="button" *ngIf="table.positionX === null" (click)="placeTable(table)" [disabled]="!imageSrc || busy">วางบน Layout</button>
+                    <button type="button" class="danger-link" *ngIf="table.positionX !== null" (click)="removeTable(table)" [disabled]="busy">นำออกจาก Layout</button>
+                  </div>
+                </article>
+              </div>
+            </aside>
+          </div>
+        </ng-container>
+      </div>
+    </section>
+  </div>
+</main>

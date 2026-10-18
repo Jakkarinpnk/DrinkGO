@@ -1,1 +1,37 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'sweetalert2/dist/sweetalert2.min.css';
+
+.swal2-popup {
+  width: min(430px, calc(100vw - 32px));
+  padding: 24px;
+  border-radius: 12px;
+  font-family: "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+}
+
+.swal2-title {
+  padding: 8px 12px 0;
+  color: #172033;
+  font-size: 24px;
+  line-height: 1.35;
+}
+
+.swal2-html-container {
+  margin: 12px 12px 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.swal2-actions {
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.swal2-actions button {
+  min-width: 104px;
+  min-height: 42px;
+  margin: 0;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}

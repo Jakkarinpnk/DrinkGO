@@ -23,44 +23,10 @@
     text-decoration: none;
 }
 
-.nav-menu {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    gap: 20px;
-}
-
-.nav-menu a {
-    text-decoration: none;
-    color: #555;
-    font-weight: 500;
-    padding: 8px 12px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.nav-menu a:hover,
-.nav-menu a.active {
-    color: #007bff;
-    background-color: #f0f7ff;
-}
-
-.badge-owner {
-    background-color: #ffc107 !important;
-    color: #333 !important;
-}
-
 .nav-auth {
     display: flex;
     align-items: center;
     gap: 12px;
-}
-
-.user-name {
-    font-size: 14px;
-    color: #333;
-    font-weight: 600;
 }
 
 .btn-login {
@@ -78,16 +44,88 @@
     font-weight: bold;
 }
 
-.btn-logout {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+.user-menu {
+    position: relative;
 }
 
-.btn-logout:hover {
-    background-color: #c82333;
+.user-menu-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border: 0;
+    color: #222;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.user-menu-trigger:hover {
+    color: #007bff;
+}
+
+.chevron {
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.chevron.open {
+    transform: translateY(2px) rotate(225deg);
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 1100;
+    min-width: 180px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgb(0 0 0 / 12%);
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 11px 14px;
+    border: 0;
+    color: #333;
+    background: #fff;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+}
+
+.dropdown-item:hover:not(:disabled) {
+    background: #f3f7fb;
+}
+
+.logout-item {
+    border-top: 1px solid #edf0f2;
+    color: #dc3545;
+}
+
+@media (max-width: 600px) {
+    .navbar {
+        padding: 0 14px;
+    }
+
+    .user-menu-trigger {
+        max-width: 180px;
+    }
+
+    .user-menu-trigger span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }

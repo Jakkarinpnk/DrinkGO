@@ -1,0 +1,23 @@
+<div class="layout-backdrop" (click)="closeLayout()">
+  <section class="layout-dialog" role="dialog" aria-modal="true" aria-labelledby="layout-title" (click)="$event.stopPropagation()">
+    <header>
+      <div><p>{{ item.name }}</p><h2 id="layout-title">Layout โต๊ะ</h2></div>
+      <button type="button" (click)="closeLayout()" aria-label="ปิด Layout"><span class="material-icons">close</span></button>
+    </header>
+    <div class="layout-legend">
+      <span><i class="available"></i>เปิดใช้งาน</span><span><i class="unavailable"></i>ปิดใช้งาน</span>
+      <span>ตรวจสอบโต๊ะว่างตามวันที่ในหน้าจอง</span>
+    </div>
+    <div class="public-layout-scroll">
+      <div class="public-layout-canvas">
+        <img [src]="imageUrl(item.layout.imageUrl!)" [alt]="'Layout โต๊ะของ ' + item.name">
+        <div class="public-table-marker" *ngFor="let table of item.layout.tables"
+          [ngClass]="layoutStatusClass(table.layoutStatus)" [style.left.%]="table.positionX" [style.top.%]="table.positionY"
+          role="img" [attr.aria-label]="'โต๊ะ ' + table.tableNumber + ' ' + table.seatCapacity + ' ที่นั่ง ' + layoutStatusLabel(table.layoutStatus)"
+          [title]="'โต๊ะ ' + table.tableNumber + ' · ' + table.seatCapacity + ' ที่นั่ง · ' + layoutStatusLabel(table.layoutStatus)">
+          <strong>{{ table.tableNumber }}</strong><small>{{ table.seatCapacity }} ที่นั่ง</small>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

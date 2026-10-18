@@ -9,11 +9,15 @@
             {{ errorMessage }}
         </div>
 
+        <div class="alert-info" *ngIf="infoMessage">
+            {{ infoMessage }}
+        </div>
+
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
 
             <div class="form-group">
                 <label for="email">อีเมล</label>
-                <input type="email" id="email" formControlName="email" placeholder="example@email.com">
+                <input type="email" id="email" formControlName="email" placeholder="กรอกอีเมล">
                 <span class="error-text"
                     *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.hasError('required')">กรุณากรอกอีเมล</span>
                 <span class="error-text"
@@ -31,13 +35,21 @@
                 {{ isLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
             </button>
 
+            <a routerLink="/auth/forgot-password" class="forgot-password-link">ลืมรหัสผ่าน?</a>
+
         </form>
 
         <div class="divider">
             <span>หรือเข้าสู่ระบบด้วย</span>
         </div>
 
-        <div id="google-btn" class="google-btn-wrapper"></div>
+        <!-- Google Sign-In Button -->
+        <div class="google-btn-wrapper">
+            <app-google-sign-in-button
+                (success)="handleGoogleSuccess($event)"
+                (error)="handleGoogleError($event)">
+            </app-google-sign-in-button>
+        </div>
 
         <div class="register-link">
             ยังไม่มีบัญชีใช่ไหม? <a routerLink="/auth/register">สมัครสมาชิกเลย</a>

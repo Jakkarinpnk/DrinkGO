@@ -1,0 +1,75 @@
+<main class="account-page">
+  <div class="account-layout">
+    <app-account-sidebar></app-account-sidebar>
+
+    <section class="stores-panel">
+      <header class="panel-header">
+        <h1>ร้านของฉัน</h1>
+        <p>ร้านค้าที่อยู่ภายใต้บัญชีของคุณ</p>
+      </header>
+
+      <div class="panel-content">
+        <p class="success-message" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+        <div class="state" *ngIf="isLoading" role="status">กำลังโหลดร้านของคุณ...</div>
+        <div class="state error" *ngIf="!isLoading && errorMessage" role="alert">
+          <p>{{ errorMessage }}</p>
+          <button type="button" (click)="loadStores()">ลองใหม่</button>
+        </div>
+        <div class="state" *ngIf="!isLoading && !errorMessage && stores.length === 0">
+          ยังไม่มีร้านค้าภายใต้บัญชีนี้
+        </div>
+
+        <div class="store-groups" *ngIf="!isLoading && !errorMessage && stores.length > 0">
+          <section
+            class="store-group"
+            *ngFor="let group of storeGroups; trackBy: groupKey"
+            [attr.data-group]="group.key">
+            <header class="group-header">
+              <div>
+                <h2>{{ group.title }}</h2>
+                <p>{{ group.description }}</p>
+              </div>
+            </header>
+
+            <p class="group-empty" *ngIf="group.stores.length === 0">{{ group.emptyMessage }}</p>
+
+            <div class="store-list" *ngIf="group.stores.length > 0">
+              <article class="store-item" *ngFor="let store of group.stores; trackBy: storeId">
+                <div class="store-visual" aria-hidden="true">
+                  <img *ngIf="store.coverImageUrl; else storePlaceholder" [src]="imageUrl(store.coverImageUrl)" alt=""><ng-template #storePlaceholder><span class="material-icons">storefront</span></ng-template>
+                </div>
+                <div class="store-details">
+                  <div class="store-heading">
+                    <h3>{{ store.name }}</h3>
+                    <span class="service-status" [class.closed]="store.serviceStatus !== 'OPEN'">
+                      {{ serviceLabel(store.serviceStatus) }}
+                    </span>
+                  </div>
+                  <p class="detail-row">
+                    <span class="material-icons" aria-hidden="true">location_on</span>
+                    {{ location(store) }}
+                  </p>
+                  <p class="detail-row">
+                    <span class="material-icons" aria-hidden="true">phone</span>
+                    {{ store.phone }}
+                  </p>
+                  <p class="description">{{ store.description || 'ยังไม่มีรายละเอียดร้าน' }}</p>
+                  <p>ประเภท: {{ store.category?.name || 'ยังไม่ระบุประเภทร้าน' }}</p>
+                  <app-store-hours-display [hours]="store.hours || []"></app-store-hours-display>
+                  <p class="missing-details" *ngIf="!store.category || store.hours?.length !== 7">กรุณาเติมประเภทร้านและเวลาเปิด–ปิดในหน้าแก้ไขข้อมูลร้าน</p>
+                  <div class="store-actions">
+                    <a [routerLink]="['/owner/stores', store.id, 'edit']">แก้ไขข้อมูลร้าน</a>
+                    <a *ngIf="store.approvalStatus === 'APPROVED'" [routerLink]="['/owner/stores', store.id, 'bookings']">รายการจอง</a>
+                    <a class="primary" *ngIf="store.approvalStatus === 'APPROVED'" [routerLink]="['/owner/stores', store.id, 'tables']">จัดการโต๊ะ</a>
+                    <a *ngIf="store.approvalStatus === 'APPROVED'" [routerLink]="['/owner/stores', store.id, 'layout']">Layout ร้าน</a>
+                    <button class="danger" type="button" (click)="requestDelete(store)" [disabled]="isSaving">ลบร้าน</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>

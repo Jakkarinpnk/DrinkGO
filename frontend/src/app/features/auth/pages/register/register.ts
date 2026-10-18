@@ -1,8 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { RegisterRequest } from '../../../../shared/models/user.model';
+
+type SweetAlertApi = (typeof import('sweetalert2/dist/sweetalert2.esm.js'))['default'];
+const loadAlerts = async (): Promise<SweetAlertApi> => (await import('sweetalert2/dist/sweetalert2.esm.js')).default;
 
 @Component({
   selector: 'app-register',
@@ -14,28 +18,26 @@ import { AuthService } from '../../../../core/services/auth.service';
 export class Register implements OnInit {
   registerForm!: FormGroup;
   errorMessage: string = '';
-  successMessage: string = '';
   isLoading: boolean = false;
   isSubmitted: boolean = false;
 
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private changeDetector = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.pattern('^[0-9]{9,10}$')]], // ยอมรับตัวเลข 9-10 หลัก
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      phone: ['', [Validators.pattern('^[0-9]{9,15}$')]],
+      password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(72)]],
       confirmPassword: ['', [Validators.required]]
     }, {
-      // ใช้ Validator ตรวจสอบว่ารหัสผ่านทั้ง 2 ช่องตรงกันหรือไม่
       validators: this.passwordMatchValidator
     });
   }
 
-  // ฟังก์ชันเช็ครหัสผ่านตรงกัน
   passwordMatchValidator(g: FormGroup) {
     const password = g.get('password')?.value;
     const confirmPassword = g.get('confirmPassword')?.value;
@@ -43,32 +45,38 @@ export class Register implements OnInit {
   }
 
   onSubmit(): void {
-    this.isSubmitted = true; // 🔥 บรรทัดแรกสุด: สั่งเปิดสวิตช์ทันทีที่กดปุ่มลงทะเบียน
-
+    this.isSubmitted = true;
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
     }
-
+    
     this.isLoading = true;
     this.errorMessage = '';
-    this.successMessage = '';
-
     const { fullName, email, phone, password } = this.registerForm.value;
-    const sendData = { fullName, email, phone: phone || null, password };
+    const sendData: RegisterRequest = { fullName, email, phone: phone || null, password };
 
     this.authService.register(sendData).subscribe({
-      next: (res) => {
+      next: () => {
         this.isLoading = false;
-        this.successMessage = 'สมัครสมาชิกสำเร็จ! กำลังพาท่านไปหน้าเข้าสู่ระบบ...';
-        setTimeout(() => {
-          this.router.navigate(['/auth/login']);
-        }, 2000);
+        this.changeDetector.markForCheck();
+        void loadAlerts()
+          .then(alerts => alerts.fire({
+            icon: 'success', title: 'สมัครสมาชิกสำเร็จ',
+            text: 'กดยืนยันเพื่อไปหน้าเข้าสู่ระบบ',
+            confirmButtonText: 'ยืนยัน', confirmButtonColor: '#0967cf',
+            allowOutsideClick: false, allowEscapeKey: false,
+          }))
+          .catch(() => undefined)
+          .then(() => this.router.navigate(['/auth/login']));
       },
       error: (err) => {
         this.isLoading = false;
-        this.isSubmitted = false; // 💡 หากสมัครไม่สำเร็จ ปรับกลับเป็น false เพื่อให้กรอกใหม่
-        this.errorMessage = err.error?.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก';
+        this.isSubmitted = false;
+        this.errorMessage = err.status === 0
+          ? 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่า Backend ทำงานอยู่'
+          : err.error?.message || 'เกิดข้อผิดพลาดในการสมัครสมาชิก';
+        this.changeDetector.markForCheck();
       }
     });
   }

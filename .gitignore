@@ -13,6 +13,10 @@ frontend/.angular/
 
 # Backend build
 backend/dist/
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/private-uploads/*
+!backend/private-uploads/.gitkeep
 
 # Logs
 *.log

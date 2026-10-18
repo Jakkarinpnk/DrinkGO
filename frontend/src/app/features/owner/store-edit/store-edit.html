@@ -1,0 +1,76 @@
+<main class="account-page">
+  <div class="account-layout">
+    <app-account-sidebar></app-account-sidebar>
+    <section class="edit-panel">
+      <header class="panel-header"><div><h1>แก้ไขร้าน</h1><p>{{ store?.name || 'จัดการข้อมูลและรูปภาพร้านของคุณ' }}</p></div><a routerLink="/owner">กลับไปร้านของฉัน</a></header>
+      <div class="loading-state" *ngIf="isLoading" role="status">กำลังโหลดข้อมูลร้าน...</div>
+      <div class="loading-state" *ngIf="!isLoading && !store" role="alert"><p>{{ errorMessage }}</p><button type="button" (click)="loadStore()">ลองใหม่</button></div>
+      <div class="panel-content" *ngIf="!isLoading && store">
+        <p class="success-message" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+                <form class="store-editor" [formGroup]="editForm" (ngSubmit)="saveStore()">
+                  <div class="edit-grid">
+                    <label class="wide">ประเภทร้าน<select formControlName="categoryId"><option [ngValue]="0">เลือกประเภทร้าน</option><option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option></select><small *ngIf="invalid('categoryId')">กรุณาเลือกประเภทร้าน</small></label>
+                    <p class="action-error wide" *ngIf="categoryError" role="alert">{{ categoryError }} <button type="button" (click)="loadCategories()">ลองใหม่</button></p>
+                    <label>ชื่อร้าน<input formControlName="name" maxlength="180" [attr.aria-invalid]="invalid('name')"><small *ngIf="invalid('name')">กรุณากรอกชื่อร้าน 2–180 ตัวอักษร</small></label>
+                    <label>เบอร์โทรร้าน<input type="tel" formControlName="phone" maxlength="15" [attr.aria-invalid]="invalid('phone')"><small *ngIf="invalid('phone')">กรุณากรอกเบอร์โทร 9–15 หลัก</small></label>
+                    <label class="wide">รายละเอียดร้าน<textarea formControlName="description" rows="3" maxlength="3000"></textarea></label>
+                    <label class="wide">ลิงก์ LINE<input type="url" formControlName="lineUrl" maxlength="500" [attr.aria-invalid]="invalid('lineUrl')"><small *ngIf="invalid('lineUrl')">กรุณาระบุลิงก์แบบ http:// หรือ https://</small></label>
+                    <label class="wide">ที่อยู่ร้าน<textarea formControlName="addressLine" rows="2" maxlength="1000" [attr.aria-invalid]="invalid('addressLine')"></textarea><small *ngIf="invalid('addressLine')">กรุณากรอกที่อยู่ 5–1,000 ตัวอักษร</small></label>
+                    <label>จังหวัด<input formControlName="province" maxlength="120" [attr.aria-invalid]="invalid('province')"><small *ngIf="invalid('province')">กรุณากรอกจังหวัด 2–120 ตัวอักษร</small></label>
+                    <label>สถานะบริการ<select formControlName="serviceStatus"><option value="OPEN">เปิดให้บริการ</option><option value="CLOSED_TEMPORARILY">ปิดชั่วคราว</option><option value="CLOSED_PERMANENTLY">ปิดถาวร</option></select></label>
+                    <label class="wide">ลิงก์ Google Maps ของร้าน<input type="url" formControlName="googleMapUrl" maxlength="2048" [attr.aria-invalid]="invalid('googleMapUrl')"><small *ngIf="invalid('googleMapUrl')">กรุณาระบุลิงก์ Google Maps แบบ https://</small></label>
+                  </div>
+
+                  <app-store-hours-editor formControlName="hours"></app-store-hours-editor>
+                  <p class="action-error" *ngIf="invalid('hours')">กรุณาเลือกวันเปิดร้านอย่างน้อย 1 วัน และระบุเวลาเปิด–ปิดให้ครบ</p>
+                  <section class="image-section" aria-labelledby="store-images-heading">
+                    <h2 id="store-images-heading">รูปภาพร้าน</h2>
+                    <p>เพิ่มรูปได้สูงสุด 10 รูป รองรับ JPG, PNG และ WebP รูปละไม่เกิน 5 MB</p>
+                    <label class="upload-button"><span class="material-icons" aria-hidden="true">add_photo_alternate</span> เพิ่มรูปภาพ<input type="file" accept="image/jpeg,image/png,image/webp" multiple (change)="onImagesSelected($event)" [disabled]="isSaving" aria-label="เพิ่มรูปภาพร้าน"></label>
+                    <p class="image-error" *ngIf="imageError" role="alert">{{ imageError }}</p>
+                    <p *ngIf="!visibleImages.length && !selectedImages.length" class="empty-images">ยังไม่มีรูปภาพร้าน</p>
+                    <div class="image-grid">
+                      <article class="image-card" *ngFor="let image of visibleImages">
+                        <img [src]="imageUrl(image.url)" [alt]="image.altText || 'รูปภาพร้าน'">
+                        <span class="cover-badge" *ngIf="coverKey === 'existing:' + image.id">รูปปก</span>
+                        <div><button type="button" (click)="selectCover('existing:' + image.id)" [disabled]="isSaving || coverKey === 'existing:' + image.id">ใช้เป็นรูปปก</button><button class="danger" type="button" (click)="removeExisting(image.id)" [disabled]="isSaving">นำรูปออก</button></div>
+                      </article>
+                      <article class="image-card" *ngFor="let image of selectedImages">
+                        <img [src]="image.preview" [alt]="image.file.name">
+                        <span class="cover-badge" *ngIf="coverKey === 'new:' + image.key">รูปปก</span>
+                        <p class="new-image-label">รูปใหม่ · {{ image.file.name }}</p>
+                        <div><button type="button" (click)="selectCover('new:' + image.key)" [disabled]="isSaving || coverKey === 'new:' + image.key">ใช้เป็นรูปปก</button><button class="danger" type="button" (click)="removeSelected(image.key)" [disabled]="isSaving">นำรูปออก</button></div>
+                      </article>
+                    </div>
+                    <button class="undo-button" type="button" *ngIf="removedImageIds.length" (click)="undoRemoval()" [disabled]="isSaving">ยกเลิกการนำรูปเดิมออก ({{ removedImageIds.length }} รูป)</button>
+                    <p class="image-hint">การเพิ่มรูป เปลี่ยนรูปปก และนำรูปออกจะมีผลเมื่อกดบันทึกข้อมูล</p>
+                  </section>
+                  <section class="menu-section" aria-labelledby="store-menu-files-heading">
+                    <h2 id="store-menu-files-heading">ไฟล์เมนูอาหาร</h2>
+                    <p>เพิ่มได้สูงสุด 10 ไฟล์ รองรับ PDF, JPG, PNG และ WebP ไฟล์ละไม่เกิน 10 MB</p>
+                    <label class="upload-button"><span class="material-icons" aria-hidden="true">restaurant_menu</span> เพิ่มไฟล์เมนู<input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" multiple (change)="onMenuFilesSelected($event)" [disabled]="isSaving" aria-label="เพิ่มไฟล์เมนูอาหาร"></label>
+                    <p class="image-error" *ngIf="menuFileError" role="alert">{{ menuFileError }}</p>
+                    <p *ngIf="!visibleMenuFiles.length && !selectedMenuFiles.length" class="empty-images">ยังไม่มีไฟล์เมนูอาหาร</p>
+                    <div class="menu-file-grid">
+                      <article class="menu-file-card" *ngFor="let menu of visibleMenuFiles">
+                        <img *ngIf="isMenuImage(menu.url); else existingPdf" [src]="imageUrl(menu.url)" alt="รูปเมนูของร้าน">
+                        <ng-template #existingPdf><div class="pdf-preview"><span class="material-icons" aria-hidden="true">picture_as_pdf</span><strong>PDF</strong></div></ng-template>
+                        <p>ไฟล์เมนู</p>
+                        <div><a [href]="imageUrl(menu.url)" target="_blank" rel="noopener noreferrer">เปิดไฟล์</a><button class="danger" type="button" (click)="removeExistingMenuFile(menu.id)" [disabled]="isSaving">นำไฟล์ออก</button></div>
+                      </article>
+                      <article class="menu-file-card" *ngFor="let menu of selectedMenuFiles">
+                        <img *ngIf="menu.preview; else newPdf" [src]="menu.preview" [alt]="menu.file.name">
+                        <ng-template #newPdf><div class="pdf-preview"><span class="material-icons" aria-hidden="true">picture_as_pdf</span><strong>PDF</strong></div></ng-template>
+                        <p>ไฟล์ใหม่ · {{ menu.file.name }}</p>
+                        <div><button class="danger" type="button" (click)="removeSelectedMenuFile(menu.key)" [disabled]="isSaving">นำไฟล์ออก</button></div>
+                      </article>
+                    </div>
+                    <p class="image-hint">การเพิ่มหรือนำไฟล์เมนูออกจะมีผลเมื่อกดบันทึกข้อมูล</p>
+                  </section>
+                  <p class="action-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+                  <div class="store-actions"><button class="primary" type="submit" [disabled]="isSaving">{{ isSaving ? 'กำลังบันทึก...' : 'บันทึกข้อมูล' }}</button></div>
+                </form>
+      </div>
+    </section>
+  </div>
+</main>

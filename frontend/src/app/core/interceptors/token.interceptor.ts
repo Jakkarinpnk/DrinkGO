@@ -1,40 +1,88 @@
 import { inject } from '@angular/core';
-import { HttpRequest, HttpHandlerFn, HttpEvent, HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, catchError } from 'rxjs';
+import {
+  HttpContextToken,
+  HttpErrorResponse,
+  HttpInterceptorFn,
+  HttpRequest,
+} from '@angular/common/http';
+import { Router } from '@angular/router';
+import { catchError, switchMap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../services/auth.service';
 
-export const tokenInterceptor: HttpInterceptorFn = (
-    req: HttpRequest<unknown>,
-    next: HttpHandlerFn
-): Observable<HttpEvent<unknown>> => {
+const IS_REFRESH_RETRY = new HttpContextToken<boolean>(() => false);
+const AUTH_ENDPOINTS_WITHOUT_RETRY = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/google',
+  '/auth/refresh',
+  '/auth/logout',
+  '/auth/forgot-password',
+  '/auth/verify-reset-otp',
+  '/auth/reset-password',
+];
 
-    const authService = inject(AuthService);
-    const token = authService.getAccessToken();
+const withAccessToken = (request: HttpRequest<unknown>, token: string) =>
+  request.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
 
-    let clonedRequest = req;
+const isApiRequest = (request: HttpRequest<unknown>): boolean =>
+  request.url.startsWith(environment.apiUrl);
 
-    // 1. ถ้ามี Token อยู่ (หมายถึงล็อกอินแล้ว) ให้ Clone Request เดิม แล้วสอดไส้ Header เข้าไป
-    if (token) {
-        clonedRequest = req.clone({
-            setHeaders: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-    }
+const shouldSkipRefresh = (request: HttpRequest<unknown>): boolean =>
+  AUTH_ENDPOINTS_WITHOUT_RETRY.some((endpoint) => request.url.includes(endpoint));
 
-    // 2. ปล่อย Request (ที่อาจจะโดนสอดไส้แล้ว) ให้เดินทางต่อไป
-    return next(clonedRequest).pipe(
-        // 3. ดักจับ Error ที่ตอบกลับมาจาก Backend
-        catchError((error: HttpErrorResponse) => {
-            // ถ้า Backend ตอบกลับมาเป็น 401 Unauthorized (Token หมดอายุ หรือ ไม่ถูกต้อง)
-            if (error.status === 401) {
-                // [Future Scope]: ตรงนี้เดี๋ยวเราค่อยมาเพิ่มระบบ "Refresh Token อัตโนมัติ" ในอนาคต
-                // แต่ตอนนี้ให้บังคับ Log out แล้วเด้งกลับหน้า Login ไปก่อน
-                authService.logout();
-                alert('เซสชันของคุณหมดอายุ กรุณาเข้าสู่ระบบใหม่');
-                window.location.href = '/auth/login'; // เตะกลับหน้าแรก
-            }
-            return throwError(() => error);
-        })
-    );
+const redirectToLogin = (router: Router, reason: string): void => {
+  void router.navigate(['/auth/login'], {
+    queryParams: { returnUrl: router.url, reason },
+  });
+};
+
+export const tokenInterceptor: HttpInterceptorFn = (request, next) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  const accessToken = authService.getAccessToken();
+  const apiRequest = isApiRequest(request);
+  const authenticatedRequest =
+    apiRequest && accessToken ? withAccessToken(request, accessToken) : request;
+
+  return next(authenticatedRequest).pipe(
+    catchError((error: HttpErrorResponse) => {
+      if (apiRequest && error.status === 403 && error.error?.error?.code === 'ACCOUNT_NOT_ACTIVE') {
+        authService.clearSession();
+        redirectToLogin(router, 'account-not-active');
+        return throwError(() => error);
+      }
+
+      const canRefresh =
+        apiRequest &&
+        error.status === 401 &&
+        !request.context.get(IS_REFRESH_RETRY) &&
+        !shouldSkipRefresh(request) &&
+        Boolean(authService.getRefreshToken());
+
+      if (!canRefresh) {
+        if (apiRequest && error.status === 401 && !shouldSkipRefresh(request)) {
+          authService.clearSession();
+          redirectToLogin(router, 'session-expired');
+        }
+        return throwError(() => error);
+      }
+
+      return authService.refreshSession().pipe(
+        switchMap((newAccessToken) =>
+          next(
+            withAccessToken(
+              request.clone({ context: request.context.set(IS_REFRESH_RETRY, true) }),
+              newAccessToken,
+            ),
+          ),
+        ),
+        catchError((refreshError) => {
+          authService.clearSession();
+          redirectToLogin(router, 'session-expired');
+          return throwError(() => refreshError);
+        }),
+      );
+    }),
+  );
 };

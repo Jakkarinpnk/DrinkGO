@@ -2,22 +2,56 @@
     <div class="nav-container">
         <a routerLink="/" class="nav-logo">DrinkGo</a>
 
-        <ul class="nav-menu">
-            <li *ngIf="isLoggedIn && currentUser?.role === 'owner'">
-                <a routerLink="/owner" class="badge-owner">จัดการร้านค้า</a>
-            </li>
-        </ul>
-
         <div class="nav-auth">
             <ng-container *ngIf="!isLoggedIn">
                 <a routerLink="/auth/login" class="btn-login">เข้าสู่ระบบ</a>
                 <a routerLink="/auth/register" class="btn-register">สมัครสมาชิก</a>
             </ng-container>
 
-            <ng-container *ngIf="isLoggedIn">
-                <span class="user-name">สวัสดี, {{ currentUser?.fullName }}</span>
-                <button (click)="onLogout()" class="btn-logout">ออกจากระบบ</button>
-            </ng-container>
+            <div *ngIf="isLoggedIn" class="user-menu">
+                <button
+                    type="button"
+                    class="user-menu-trigger"
+                    (click)="toggleUserMenu($event)"
+                    [attr.aria-expanded]="isUserMenuOpen"
+                    aria-haspopup="menu">
+                    <span>{{ currentUser?.fullName }}</span>
+                    <span class="chevron" [class.open]="isUserMenuOpen" aria-hidden="true"></span>
+                </button>
+
+                <div *ngIf="isUserMenuOpen" class="user-dropdown" role="menu" (click)="$event.stopPropagation()">
+                    <a
+                        routerLink="/profile"
+                        class="dropdown-item"
+                        role="menuitem"
+                        (click)="closeUserMenu()">
+                        โปรไฟล์
+                    </a>
+                    <a
+                        *ngIf="currentUser?.role === 'member' || currentUser?.role === 'owner'"
+                        routerLink="/owner-application"
+                        class="dropdown-item"
+                        role="menuitem"
+                        (click)="closeUserMenu()">
+                        ลงทะเบียนร้าน
+                    </a>
+
+                    <a
+                        *ngIf="currentUser?.role === 'member' || currentUser?.role === 'owner'"
+                        routerLink="/owner"
+                        class="dropdown-item"
+                        role="menuitem"
+                        (click)="closeUserMenu()">
+                        ร้านของฉัน
+                    </a>
+                    <a *ngIf="currentUser?.role === 'member' || currentUser?.role === 'owner'" routerLink="/bookings"
+                        class="dropdown-item" role="menuitem" (click)="closeUserMenu()">ประวัติการจอง
+                    </a>
+                    <button type="button" class="dropdown-item logout-item" role="menuitem" (click)="onLogout()" [disabled]="isLoggingOut">
+                        {{ isLoggingOut ? 'กำลังออกจากระบบ...' : 'ออกจากระบบ' }}
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </nav>

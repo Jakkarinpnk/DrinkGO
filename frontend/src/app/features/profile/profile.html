@@ -1,0 +1,98 @@
+<main class="profile-page">
+  <div class="account-layout">
+    <app-account-sidebar></app-account-sidebar>
+
+    <section class="profile-panel">
+      <header class="profile-header">
+        <div>
+          <h1>ข้อมูลผู้ใช้</h1>
+          <p>{{ currentUser?.role === 'admin' ? 'จัดการข้อมูลผู้ดูแลระบบ' : 'จัดการข้อมูลส่วนตัวและรูปโปรไฟล์' }}</p>
+        </div>
+      </header>
+
+      <div class="profile-content">
+        <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+        <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+          <div class="profile-image-section" *ngIf="currentUser?.role !== 'admin'">
+            <div class="profile-image">
+              <img
+                *ngIf="displayedImage; else profileInitial"
+                [src]="displayedImage"
+                [alt]="'รูปโปรไฟล์ของ ' + (currentUser?.fullName || 'ผู้ใช้งาน')">
+              <ng-template #profileInitial>{{ initial }}</ng-template>
+
+              <label for="profile-image" class="image-edit-button" title="เปลี่ยนรูปโปรไฟล์">
+                <span class="material-icons" aria-hidden="true">photo_camera</span>
+                <span class="sr-only">เปลี่ยนรูปโปรไฟล์</span>
+              </label>
+              <input
+                id="profile-image"
+                class="file-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onImageSelected($event)">
+            </div>
+            <p class="image-hint">รองรับ JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB</p>
+          </div>
+
+          <section class="personal-section" aria-labelledby="personal-title">
+            <div class="section-heading">
+              <h2 id="personal-title">ข้อมูลส่วนตัว</h2>
+              <p>ข้อมูลนี้ใช้สำหรับบัญชีและการติดต่อของคุณ</p>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label for="profile-name">ชื่อ–สกุล</label>
+                <input id="profile-name" type="text" formControlName="fullName" autocomplete="name">
+                <span class="field-error" *ngIf="profileForm.controls.fullName.touched && profileForm.controls.fullName.invalid">
+                  ชื่อ–สกุลต้องมีความยาว 2-150 ตัวอักษร
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="profile-email">อีเมล</label>
+                <input id="profile-email" type="email" formControlName="email" autocomplete="email">
+                <span class="field-error" *ngIf="profileForm.controls.email.touched && profileForm.controls.email.invalid">
+                  กรุณากรอกอีเมลให้ถูกต้อง
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label for="profile-phone">เบอร์โทร</label>
+                <input id="profile-phone" type="tel" formControlName="phone" autocomplete="tel" placeholder="0812345678">
+                <span class="field-error" *ngIf="profileForm.controls.phone.touched && profileForm.controls.phone.invalid">
+                  เบอร์โทรต้องเป็นตัวเลข 9-15 หลัก
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section class="password-section" aria-labelledby="password-title">
+            <div class="password-copy">
+              <span class="material-icons" aria-hidden="true">lock</span>
+              <div>
+                <h2 id="password-title">รหัสผ่าน</h2>
+                <p>••••••••••••</p>
+              </div>
+            </div>
+            <a routerLink="/auth/change-password" class="secondary-button">
+              เปลี่ยนรหัสผ่าน
+              <span class="material-icons" aria-hidden="true">chevron_right</span>
+            </a>
+          </section>
+
+          <div class="form-actions">
+            <a routerLink="/" class="cancel-button">ยกเลิก</a>
+            <button type="submit" class="save-button" [disabled]="isLoading">
+              <span class="material-icons" aria-hidden="true">save</span>
+              {{ isLoading ? 'กำลังบันทึก...' : 'บันทึกข้อมูล' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+</main>

@@ -1,0 +1,79 @@
+<div class="admin-shell">
+  <button
+    type="button"
+    class="sidebar-toggle"
+    (click)="toggleSidebar()"
+    [attr.aria-expanded]="isSidebarOpen"
+    aria-controls="admin-sidebar"
+    title="เปิดเมนูแอดมิน">
+    <span class="material-icons" aria-hidden="true">menu</span>
+    <span>เมนูแอดมิน</span>
+  </button>
+
+  <aside id="admin-sidebar" class="admin-sidebar" [class.open]="isSidebarOpen">
+    <div class="admin-identity">
+      <div class="admin-avatar" aria-hidden="true">
+        <img *ngIf="displayedImage; else initialAvatar" [src]="displayedImage" alt="">
+        <ng-template #initialAvatar>{{ initial }}</ng-template>
+      </div>
+      <div>
+        <strong>{{ currentUser?.fullName || 'Admin' }}</strong>
+        <span>{{ currentUser?.email }}</span>
+      </div>
+    </div>
+
+    <nav class="admin-nav" aria-label="เมนูผู้ดูแลระบบ">
+      <a
+        routerLink="/admin"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeSidebar()">
+        <span class="material-icons" aria-hidden="true">dashboard</span>
+        <span>หน้าหลัก</span>
+      </a>
+      <a routerLink="/admin/owner-applications" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="material-icons" aria-hidden="true">fact_check</span>
+        <span>คำขอลงทะเบียนร้าน</span>
+      </a>
+
+      <p class="nav-section-label">จัดการระบบ</p>
+      <button type="button" disabled>
+        <span class="material-icons" aria-hidden="true">report</span>
+        <span>รายงานปัญหา</span>
+      </button>
+      <button type="button" disabled>
+        <span class="material-icons" aria-hidden="true">monitoring</span>
+        <span>สถิติระบบ</span>
+      </button>
+      <button type="button" disabled>
+        <span class="material-icons" aria-hidden="true">manage_accounts</span>
+        <span>จัดการบัญชีผู้ใช้</span>
+      </button>
+
+      <div class="nav-spacer"></div>
+      <a routerLink="/profile" (click)="closeSidebar()">
+        <span class="material-icons" aria-hidden="true">person</span>
+        <span>โปรไฟล์</span>
+      </a>
+      <a routerLink="/" (click)="closeSidebar()">
+        <span class="material-icons" aria-hidden="true">storefront</span>
+        <span>กลับหน้าหลักเว็บไซต์</span>
+      </a>
+      <button type="button" class="logout-button" (click)="onLogout()" [disabled]="isLoggingOut">
+        <span class="material-icons" aria-hidden="true">logout</span>
+        <span>{{ isLoggingOut ? 'กำลังออกจากระบบ...' : 'ออกจากระบบ' }}</span>
+      </button>
+    </nav>
+  </aside>
+
+  <button
+    *ngIf="isSidebarOpen"
+    type="button"
+    class="sidebar-backdrop"
+    aria-label="ปิดเมนูแอดมิน"
+    (click)="closeSidebar()"></button>
+
+  <section class="admin-content">
+    <router-outlet></router-outlet>
+  </section>
+</div>

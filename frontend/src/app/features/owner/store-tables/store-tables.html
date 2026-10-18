@@ -1,0 +1,116 @@
+<main class="account-page">
+  <div class="account-layout">
+    <app-account-sidebar></app-account-sidebar>
+
+    <section class="tables-panel">
+      <header class="panel-header">
+        <div>
+          <h1>จัดการโต๊ะ</h1>
+          <p>กำหนดหมายเลข จำนวนที่นั่ง และสถานะของโต๊ะภายในร้าน</p>
+        </div>
+        <div class="header-links">
+          <a [routerLink]="['/owner/stores', storeId, 'layout']">Layout ร้าน</a>
+          <a routerLink="/owner" class="back-link">
+            <span class="material-icons" aria-hidden="true">arrow_back</span>
+            กลับไปร้านของฉัน
+          </a>
+        </div>
+      </header>
+
+      <div class="panel-content">
+        <div class="summary-cards" *ngIf="!isLoading && !errorMessage">
+          <div class="summary-card">
+            <span class="material-icons" aria-hidden="true">table_restaurant</span>
+            <div><strong>{{ tables.length }}</strong><span>โต๊ะทั้งหมด</span></div>
+          </div>
+          <div class="summary-card">
+            <span class="material-icons" aria-hidden="true">check_circle</span>
+            <div><strong>{{ activeCount }}</strong><span>โต๊ะที่เปิดใช้งาน</span></div>
+          </div>
+          <div class="summary-card">
+            <span class="material-icons" aria-hidden="true">groups</span>
+            <div><strong>{{ totalSeats }}</strong><span>ที่นั่งที่พร้อมใช้งาน</span></div>
+          </div>
+        </div>
+
+        <p class="message success" *ngIf="successMessage" role="status">{{ successMessage }}</p>
+        <p class="message error" *ngIf="errorMessage && !isLoading" role="alert">{{ errorMessage }}</p>
+
+        <div class="state" *ngIf="isLoading" role="status">กำลังโหลดรายการโต๊ะ...</div>
+
+        <div class="workspace" *ngIf="!isLoading && (!errorMessage || tables.length > 0)">
+          <section class="form-card">
+            <header>
+              <h2>{{ editingTable ? 'แก้ไขโต๊ะ ' + editingTable.tableNumber : 'เพิ่มโต๊ะใหม่' }}</h2>
+              <p>{{ editingTable ? 'แก้ไขข้อมูลแล้วกดบันทึก' : 'ระบุข้อมูลโต๊ะที่ต้องการเปิดรับจอง' }}</p>
+            </header>
+
+            <form [formGroup]="tableForm" (ngSubmit)="saveTable()">
+              <label for="tableNumber">หมายเลขโต๊ะ <span>*</span></label>
+              <input id="tableNumber" type="text" formControlName="tableNumber" maxlength="20" placeholder="เช่น A1, VIP-01">
+              <small class="field-error" *ngIf="tableForm.controls.tableNumber.touched && tableForm.controls.tableNumber.invalid">
+                กรุณาระบุหมายเลขโต๊ะไม่เกิน 20 ตัวอักษร
+              </small>
+
+              <label for="seatCapacity">จำนวนที่นั่ง <span>*</span></label>
+              <input id="seatCapacity" type="number" formControlName="seatCapacity" min="1" max="100" inputmode="numeric">
+              <small class="field-error" *ngIf="tableForm.controls.seatCapacity.touched && tableForm.controls.seatCapacity.invalid">
+                จำนวนที่นั่งต้องอยู่ระหว่าง 1-100 ที่นั่ง
+              </small>
+
+              <label for="status">สถานะ</label>
+              <select id="status" formControlName="status">
+                <option value="ACTIVE">เปิดใช้งาน</option>
+                <option value="INACTIVE">ปิดใช้งาน</option>
+              </select>
+              <small class="hint">โต๊ะที่ปิดใช้งานจะไม่ถูกนำไปเปิดรับจอง</small>
+
+              <div class="form-actions">
+                <button type="submit" class="primary" [disabled]="isSaving || deletingId !== null">
+                  {{ isSaving ? 'กำลังบันทึก...' : (editingTable ? 'บันทึกการแก้ไข' : 'เพิ่มโต๊ะ') }}
+                </button>
+                <button type="button" *ngIf="editingTable" (click)="cancelEdit()" [disabled]="isSaving">ยกเลิกแก้ไข</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="table-list-card">
+            <header class="list-header">
+              <div><h2>รายการโต๊ะ</h2><p>โต๊ะทั้งหมดภายในร้าน</p></div>
+              <span>{{ tables.length }} โต๊ะ</span>
+            </header>
+
+            <div class="empty-list" *ngIf="tables.length === 0">
+              <span class="material-icons" aria-hidden="true">table_restaurant</span>
+              <strong>ยังไม่มีโต๊ะ</strong>
+              <p>เพิ่มโต๊ะแรกของร้านจากแบบฟอร์มด้านข้าง</p>
+            </div>
+
+            <div class="table-list" *ngIf="tables.length > 0">
+              <article class="table-item" *ngFor="let table of tables; trackBy: tableId" [class.inactive]="table.status === 'INACTIVE'">
+                <div class="table-icon"><span class="material-icons" aria-hidden="true">table_restaurant</span></div>
+                <div class="table-details">
+                  <div class="table-title">
+                    <h3>โต๊ะ {{ table.tableNumber }}</h3>
+                    <span class="status" [class.inactive]="table.status === 'INACTIVE'">{{ statusLabel(table.status) }}</span>
+                  </div>
+                  <p><span class="material-icons" aria-hidden="true">person</span> {{ table.seatCapacity }} ที่นั่ง</p>
+                </div>
+                <div class="item-actions">
+                  <button type="button" (click)="editTable(table)" [disabled]="isSaving || deletingId !== null" aria-label="แก้ไขโต๊ะ">
+                    <span class="material-icons" aria-hidden="true">edit</span>
+                  </button>
+                  <button type="button" class="danger" (click)="requestDelete(table)" [disabled]="isSaving || deletingId !== null" aria-label="ลบโต๊ะ">
+                    <span class="material-icons" aria-hidden="true">{{ deletingId === table.id ? 'hourglass_empty' : 'delete' }}</span>
+                  </button>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+
+        <button class="retry" type="button" *ngIf="!isLoading && errorMessage && tables.length === 0" (click)="loadTables()">ลองใหม่</button>
+      </div>
+    </section>
+  </div>
+</main>

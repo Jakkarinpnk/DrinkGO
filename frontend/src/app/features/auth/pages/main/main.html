@@ -4,22 +4,58 @@
         <p>จองโต๊ะล่วงหน้า การันตีที่นั่ง ไม่ต้องรอคิวให้เสียเวลา</p>
     </header>
 
-    <div class="restaurant-grid">
-        <div class="card" *ngFor="let shop of restaurants">
-            <img [src]="shop.image" [alt]="shop.name" class="card-img">
-            <div class="card-body">
-                <h3>{{ shop.name }}</h3>
-                <p>{{ shop.description }}</p>
+    <form class="search-form" [formGroup]="searchForm" (ngSubmit)="searchStores()" aria-label="ค้นหาร้าน">
+        <div class="search-field location-field"><span class="field-icon material-icons" aria-hidden="true">location_on</span><app-search-dropdown formControlName="location" [options]="locationOptions" placeholder="สถานที่" ariaLabel="สถานที่" emptyValue="" (selectionChange)="searchStores()"></app-search-dropdown></div>
+        <div class="search-field category-field"><span class="field-icon material-icons" aria-hidden="true">local_bar</span><app-search-dropdown formControlName="categoryId" [options]="categoryOptions" placeholder="ประเภทร้าน" ariaLabel="ประเภทร้าน" [emptyValue]="0" (selectionChange)="searchStores()"></app-search-dropdown></div>
+        <div class="search-field name-field"><label><span class="visually-hidden">ชื่อร้าน</span><input type="search" formControlName="name" maxlength="100" placeholder="ค้นหาชื่อร้าน" aria-label="ชื่อร้าน"></label></div>
+        <button class="search-submit" type="submit" aria-label="ค้นหา"><span class="material-icons" aria-hidden="true">search</span></button>
+    </form>
+    <button class="clear-search" type="button" *ngIf="hasSearch" (click)="clearSearch()">ล้างการค้นหา</button>
+    <p class="filter-error" *ngIf="categoryError" role="alert">{{ categoryError }} <button type="button" (click)="loadCategories()">ลองใหม่</button></p>
+    <p class="filter-error" *ngIf="locationError" role="alert">{{ locationError }} <button type="button" (click)="loadLocations()">ลองใหม่</button></p>
+    <p class="result-count" *ngIf="!isLoadingStores && !storeError" role="status">{{ hasSearch ? 'พบ' : 'ร้านทั้งหมด' }} {{ restaurants.length }} ร้าน</p>
 
-                <button class="btn-book" [ngClass]="{'btn-member': isLoggedIn, 'btn-guest': !isLoggedIn}"
-                    (click)="onBookTable(shop.id)">
+    <div class="store-state" *ngIf="isLoadingStores" role="status">
+        <span class="material-icons" aria-hidden="true">progress_activity</span>
+        <p>กำลังโหลดร้านค้า</p>
+    </div>
 
-                    <span *ngIf="isLoggedIn">✅ จองโต๊ะทันที</span>
+    <div class="store-state error" *ngIf="!isLoadingStores && storeError" role="alert">
+        <span class="material-icons" aria-hidden="true">error_outline</span>
+        <p>{{ storeError }}</p>
+        <button type="button" (click)="loadApprovedStores()">ลองใหม่</button>
+    </div>
 
-                    <span *ngIf="!isLoggedIn">🔒 ล็อกอินเพื่อจองโต๊ะ</span>
+    <div class="store-state" *ngIf="!isLoadingStores && !storeError && restaurants.length === 0">
+        <span class="material-icons" aria-hidden="true">storefront</span>
+        <p>{{ hasSearch ? 'ไม่พบร้านที่ตรงกับการค้นหา ลองเปลี่ยนเงื่อนไขหรือล้างการค้นหา' : 'ยังไม่มีร้านค้าที่ได้รับการอนุมัติ' }}</p>
+    </div>
 
-                </button>
+    <div class="restaurant-grid" *ngIf="!isLoadingStores && !storeError && restaurants.length > 0">
+        <article class="card" *ngFor="let shop of restaurants">
+            <div class="card-cover" aria-hidden="true">
+                <img *ngIf="shop.coverImageUrl; else shopPlaceholder" [src]="imageUrl(shop.coverImageUrl)" alt=""><ng-template #shopPlaceholder><span class="material-icons">storefront</span></ng-template>
             </div>
-        </div>
+            <div class="card-body">
+                <div class="card-heading">
+                    <h2>{{ shop.name }}</h2>
+                    <span class="service-status" [class.closed]="shop.serviceStatus !== 'OPEN'">
+                        {{ getServiceStatusLabel(shop.serviceStatus) }}
+                    </span>
+                </div>
+                <p class="location">
+                    <span class="material-icons" aria-hidden="true">location_on</span>
+                    {{ getLocation(shop) }}
+                </p>
+                <p class="description">{{ shop.description || 'ร้านค้าที่ผ่านการตรวจสอบจาก DrinkGo' }}</p>
+                <p>ประเภท: {{ shop.category?.name || 'ยังไม่ระบุประเภทร้าน' }}</p>
+                <app-store-hours-display [hours]="shop.hours || []"></app-store-hours-display>
+
+                <a class="btn-details" [routerLink]="['/stores', shop.id]">
+                    <span class="material-icons" aria-hidden="true">visibility</span>
+                    รายละเอียด
+                </a>
+            </div>
+        </article>
     </div>
 </div>

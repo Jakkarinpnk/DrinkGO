@@ -1,0 +1,175 @@
+<main class="account-page">
+  <div class="account-layout">
+    <app-account-sidebar></app-account-sidebar>
+    <section class="application-page">
+  <div class="page-heading">
+    <div>
+      <h1>ลงทะเบียนร้าน</h1>
+    </div>
+    <a routerLink="/" class="back-link">กลับหน้าหลัก</a>
+  </div>
+
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <section class="status-panel submission-success" *ngIf="application as item">
+    <div class="status-heading">
+      <div>
+        <p class="eyebrow">ส่งคำขอเลขที่ {{ item.id }} สำเร็จ</p>
+        <h2>ลงทะเบียน {{ item.store.name }} แล้ว</h2>
+      </div>
+      <span class="status-badge pending">รอตรวจสอบ</span>
+    </div>
+
+    <p class="status-message">
+      ทีมงานได้รับข้อมูลร้านแล้ว คุณสามารถติดตามผลการอนุมัติได้ที่หน้าร้านของฉัน
+    </p>
+    <a routerLink="/owner" class="view-stores-link">ไปที่ร้านของฉัน</a>
+  </section>
+
+  <section class="application-form-panel" *ngIf="!application">
+    <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()">
+      <header class="section-heading">
+        <h2>ข้อมูลร้าน</h2>
+      </header>
+
+      <div class="form-grid">
+        <label class="field wide"><span>ประเภทร้าน</span><select formControlName="categoryId"><option [ngValue]="0">เลือกประเภทร้าน</option><option *ngFor="let category of categories" [ngValue]="category.id">{{ category.name }}</option></select><small *ngIf="applicationForm.controls.categoryId.touched && applicationForm.controls.categoryId.invalid">กรุณาเลือกประเภทร้าน</small></label>
+        <div class="field wide" *ngIf="categoryError" role="alert">{{ categoryError }} <button type="button" (click)="loadCategories()">ลองใหม่</button></div>
+        <label class="field wide">
+          <span>ชื่อร้าน</span>
+          <input type="text" formControlName="storeName" autocomplete="organization">
+          <small *ngIf="applicationForm.controls.storeName.touched && applicationForm.controls.storeName.invalid">
+            กรุณากรอกชื่อร้าน 2-180 ตัวอักษร
+          </small>
+        </label>
+
+        <label class="field wide">
+          <span>รายละเอียดร้าน</span>
+          <textarea formControlName="description" rows="4"></textarea>
+        </label>
+
+        <label class="field">
+          <span>เบอร์โทรร้าน</span>
+          <input type="tel" formControlName="storePhone" autocomplete="tel" placeholder="0812345678">
+          <small *ngIf="applicationForm.controls.storePhone.touched && applicationForm.controls.storePhone.invalid">
+            เบอร์โทรต้องเป็นตัวเลข 9-15 หลัก
+          </small>
+        </label>
+
+        <label class="field">
+          <span>ลิงก์ LINE</span>
+          <input type="url" formControlName="lineUrl" placeholder="https://line.me/ti/p/...">
+          <small *ngIf="applicationForm.controls.lineUrl.touched && applicationForm.controls.lineUrl.invalid">
+            กรุณากรอกลิงก์ที่ขึ้นต้นด้วย http:// หรือ https://
+          </small>
+        </label>
+
+        <label class="field wide">
+          <span>ที่อยู่</span>
+          <textarea formControlName="addressLine" rows="3" autocomplete="street-address"></textarea>
+          <small *ngIf="applicationForm.controls.addressLine.touched && applicationForm.controls.addressLine.invalid">
+            กรุณากรอกที่อยู่ร้าน
+          </small>
+        </label>
+
+        <label class="field">
+          <span>จังหวัด</span>
+          <input type="text" formControlName="province">
+          <small *ngIf="applicationForm.controls.province.touched && applicationForm.controls.province.invalid">
+            กรุณากรอกจังหวัด
+          </small>
+        </label>
+        <label class="field wide">
+          <span>ลิงก์ Google Maps ของร้าน</span>
+          <input type="url" formControlName="googleMapUrl" maxlength="2048"
+            placeholder="https://maps.app.goo.gl/...">
+          <small *ngIf="applicationForm.controls.googleMapUrl.touched && applicationForm.controls.googleMapUrl.invalid">
+            กรุณาวางลิงก์ Google Maps แบบ https:// ของร้าน
+          </small>
+        </label>
+      </div>
+
+      <section class="image-section" aria-labelledby="application-store-images-heading">
+        <header class="section-heading">
+          <h2 id="application-store-images-heading">รูปภาพร้าน</h2>
+          <p>เพิ่มได้สูงสุด 10 รูป รองรับ JPG, PNG และ WebP รูปละไม่เกิน 5 MB</p>
+        </header>
+        <label class="upload-button">
+          <span class="material-icons" aria-hidden="true">add_photo_alternate</span>
+          เพิ่มรูปภาพ
+          <input type="file" accept="image/jpeg,image/png,image/webp" multiple
+            (change)="onImagesSelected($event)" [disabled]="isSubmitting" aria-label="เพิ่มรูปภาพร้าน">
+        </label>
+        <p class="field-error" *ngIf="imageError" role="alert">{{ imageError }}</p>
+        <div class="image-grid" *ngIf="selectedImages.length">
+          <article class="image-card" *ngFor="let image of selectedImages">
+            <img [src]="image.preview" [alt]="image.file.name">
+            <span class="cover-badge" *ngIf="coverKey === 'new:' + image.key">รูปปก</span>
+            <p>{{ image.file.name }}</p>
+            <div>
+              <button type="button" (click)="selectCover(image.key)"
+                [disabled]="isSubmitting || coverKey === 'new:' + image.key">ใช้เป็นรูปปก</button>
+              <button class="danger" type="button" (click)="removeSelectedImage(image.key)"
+                [disabled]="isSubmitting">นำรูปออก</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="menu-section" aria-labelledby="application-menu-files-heading">
+        <header class="section-heading">
+          <h2 id="application-menu-files-heading">ไฟล์เมนูอาหาร</h2>
+          <p>เพิ่มได้สูงสุด 10 ไฟล์ รองรับ PDF, JPG, PNG และ WebP ไฟล์ละไม่เกิน 10 MB</p>
+        </header>
+        <label class="upload-button">
+          <span class="material-icons" aria-hidden="true">restaurant_menu</span>
+          เพิ่มไฟล์เมนู
+          <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" multiple
+            (change)="onMenuFilesSelected($event)" [disabled]="isSubmitting" aria-label="เพิ่มไฟล์เมนูอาหาร">
+        </label>
+        <p class="field-error" *ngIf="menuFileError" role="alert">{{ menuFileError }}</p>
+        <div class="menu-file-grid" *ngIf="selectedMenuFiles.length">
+          <article class="menu-file-card" *ngFor="let menu of selectedMenuFiles">
+            <img *ngIf="menu.preview; else pdfMenu" [src]="menu.preview" [alt]="menu.file.name">
+            <ng-template #pdfMenu><div class="pdf-preview"><span class="material-icons" aria-hidden="true">picture_as_pdf</span><strong>PDF</strong></div></ng-template>
+            <p>{{ menu.file.name }}</p>
+            <button class="danger" type="button" (click)="removeSelectedMenuFile(menu.key)" [disabled]="isSubmitting">นำไฟล์ออก</button>
+          </article>
+        </div>
+      </section>
+
+      <div class="document-section">
+        <header class="section-heading">
+          <h2>เอกสารยืนยันธุรกิจ</h2>
+        </header>
+        <div class="document-grid">
+          <label class="field">
+            <span>ประเภทเอกสาร</span>
+            <select formControlName="documentType">
+              <option value="COMMERCIAL_REGISTRATION">ทะเบียนพาณิชย์</option>
+              <option value="OTHER">เอกสารอื่น</option>
+            </select>
+          </label>
+          <label class="file-field">
+            <span>เลือกไฟล์</span>
+            <input type="file" accept="application/pdf,image/jpeg,image/png" (change)="onDocumentSelected($event)">
+            <small>PDF, JPG หรือ PNG ขนาดไม่เกิน 10 MB</small>
+          </label>
+        </div>
+        <p class="selected-file" *ngIf="selectedDocument">{{ selectedDocument.name }}</p>
+        <p class="field-error" *ngIf="fileError">{{ fileError }}</p>
+      </div>
+
+      <app-store-hours-editor formControlName="hours"></app-store-hours-editor>
+      <p class="field-error" *ngIf="applicationForm.controls.hours.touched && applicationForm.controls.hours.invalid">กรุณาเลือกวันเปิดร้านอย่างน้อย 1 วัน และระบุเวลาเปิด–ปิดให้ครบ</p>
+      <div class="form-actions">
+        <button type="submit" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'กำลังส่งคำขอ...' : 'ส่งคำขอให้ตรวจสอบ' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+    </section>
+  </div>
+</main>

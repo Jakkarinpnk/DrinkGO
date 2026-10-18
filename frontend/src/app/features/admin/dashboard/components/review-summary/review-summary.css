@@ -1,0 +1,49 @@
+.summary-panel {
+  padding: 20px;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 7px rgb(15 23 42 / 5%);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf0f3;
+}
+
+h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+header .material-icons {
+  color: #7b8796;
+  font-size: 20px;
+}
+
+.summary-list {
+  display: grid;
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.summary-list div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.summary-list span {
+  color: #5f6b7a;
+  font-size: 13px;
+}
+
+.summary-list strong {
+  color: #172033;
+  font-size: 15px;
+}
